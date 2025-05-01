@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2>{{ course.sub_name }} - Mark Attendance</h2>
+
+    <form method="post" action="{% url 'save_attendance' course.pk %}">
+        {% csrf_token %}
+
+        <!-- Date input first -->
+        <div class="form-group">
+            <label for="attendance_date">Date:</label>
+            <input type="date" id="attendance_date" name="attendance_date" class="form-control" required>
+        </div>
+
+        <table class="table table-bordered mt-4">
+            <thead>
+                <tr>
+                    <th>Roll Number</th>
+                    <th>Full Name</th>
+                    <th>Status (Present/Absent)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                    <tr>
+                        <td>{{ student.ref }}</td>
+                        <td>{{ student.first_name }}</td>
+                        <td>
+                            <select name="status_{{ student.ref }}" class="form-control">
+                                <option value="Present">Present</option>
+                                <option value="Absent">Absent</option>
+                            </select>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <button type="submit" class="btn btn-primary">Save Attendance</button>
+    </form>
+
+    <a href="{% url 'user_course_list' %}" class="btn btn-secondary mt-3">Back to Program</a>
+</div>
+{% endblock %}
