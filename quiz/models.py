@@ -30,7 +30,19 @@ CATEGORY_OPTIONS = (
     ("exam", _("Exam")),
     ("practice", _("Practice Quiz")),
 )
-
+from course.importmodels import (
+    Subject,
+    Gradelevels,
+    Studentregister,
+    Studentenrollsubject,
+    Teacher,
+    Attendance,
+    Student,
+    Parent,
+    Parentstudent,
+    Scharges,
+    Spayment
+)
 
 class QuizManager(models.Manager):
     def search(self, query=None):
@@ -47,7 +59,7 @@ class QuizManager(models.Manager):
 
 
 class Quiz(models.Model):
-    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    course = models.ForeignKey(Subject, on_delete=models.CASCADE)
     title = models.CharField(verbose_name=_("Title"), max_length=60)
     slug = models.SlugField(unique=True, blank=True)
     description = models.TextField(
@@ -238,7 +250,7 @@ class Sitting(models.Model):
     )
     quiz = models.ForeignKey(Quiz, verbose_name=_("Quiz"), on_delete=models.CASCADE)
     course = models.ForeignKey(
-        Course, verbose_name=_("Course"), on_delete=models.CASCADE
+        Subject, verbose_name=_("Subject"), on_delete=models.CASCADE
     )
     question_order = models.CharField(
         max_length=1024,

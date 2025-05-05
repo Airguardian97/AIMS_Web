@@ -209,7 +209,7 @@ def program_delete(request, pk):
 @login_required
 def course_single(request, ref):
     course = get_object_or_404(Subject, ref=ref)
-    files = Upload.objects.filter(course_id="1")
+    files = Upload.objects.filter(course_id=ref)
    
     videos = UploadVideo.objects.filter(course_id=ref)
     lecturers = Teacher.objects.get(teacher_id=course.teacher_id)

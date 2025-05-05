@@ -16,7 +16,7 @@ urlpatterns = [
     path("<slug>/<int:pk>/add/", views.QuizUpdateView.as_view(), name="quiz_update"),
     path("<slug>/<int:pk>/delete/", views.quiz_delete, name="quiz_delete"),
     path(
-        "mc-question/add/<slug>/<int:quiz_id>/",
+        "mc-question/add/<ref>/<int:quiz_id>/",
         views.MCQuestionCreate.as_view(),
         name="mc_create",
     ),

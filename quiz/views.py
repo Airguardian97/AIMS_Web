@@ -21,7 +21,7 @@ from .forms import (
     QuizAddForm,
 )
 from .models import (
-    Course,
+    # Course,
     EssayQuestion,
     MCQuestion,
     Progress,
@@ -29,7 +29,19 @@ from .models import (
     Quiz,
     Sitting,
 )
-
+from course.importmodels import (
+    Subject as Course,
+    Gradelevels,
+    Studentregister,
+    Studentenrollsubject,
+    Teacher,
+    Attendance,
+    Student,
+    Parent,
+    Parentstudent,
+    Scharges,
+    Spayment
+)
 
 # ########################################################
 # Quiz Views
@@ -44,21 +56,21 @@ class QuizCreateView(CreateView):
 
     def get_initial(self):
         initial = super().get_initial()
-        course = get_object_or_404(Course, slug=self.kwargs["slug"])
+        course = get_object_or_404(Course, ref=self.kwargs["slug"])
         initial["course"] = course
         return initial
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["course"] = get_object_or_404(Course, slug=self.kwargs["slug"])
+        context["course"] = get_object_or_404(Course, ref=self.kwargs["slug"])
         return context
 
     def form_valid(self, form):
-        form.instance.course = get_object_or_404(Course, slug=self.kwargs["slug"])
+        form.instance.course = get_object_or_404(Course, ref=self.kwargs["slug"])
         with transaction.atomic():
             self.object = form.save()
             return redirect(
-                "mc_create", slug=self.kwargs["slug"], quiz_id=self.object.id
+                "mc_create", ref=self.kwargs["slug"], quiz_id=self.object.id
             )
 
 
@@ -73,7 +85,7 @@ class QuizUpdateView(UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["course"] = get_object_or_404(Course, slug=self.kwargs["slug"])
+        context["course"] = get_object_or_404(Course, ref=self.kwargs["slug"])
         return context
 
     def form_valid(self, form):
@@ -93,7 +105,7 @@ def quiz_delete(request, slug, pk):
 
 @login_required
 def quiz_list(request, slug):
-    course = get_object_or_404(Course, slug=slug)
+    course = get_object_or_404(Course, ref=slug)
     quizzes = Quiz.objects.filter(course=course).order_by("-timestamp")
     return render(
         request, "quiz/quiz_list.html", {"quizzes": quizzes, "course": course}
@@ -118,7 +130,7 @@ class MCQuestionCreate(CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["course"] = get_object_or_404(Course, slug=self.kwargs["slug"])
+        context["course"] = get_object_or_404(Course, ref=self.kwargs["ref"])
         context["quiz_obj"] = get_object_or_404(Quiz, id=self.kwargs["quiz_id"])
         context["quiz_questions_count"] = Question.objects.filter(
             quiz=self.kwargs["quiz_id"]
@@ -154,7 +166,7 @@ class MCQuestionCreate(CreateView):
                         slug=self.kwargs["slug"],
                         quiz_id=self.kwargs["quiz_id"],
                     )
-                return redirect("quiz_index", slug=self.kwargs["slug"])
+                return redirect("quiz_index", slug=self.kwargs["ref"])
         else:
             return self.form_invalid(form)
 
@@ -232,10 +244,10 @@ class QuizTake(FormView):
 
     def dispatch(self, request, *args, **kwargs):
         self.quiz = get_object_or_404(Quiz, slug=self.kwargs["slug"])
-        self.course = get_object_or_404(Course, pk=self.kwargs["pk"])
+        self.course = get_object_or_404(Subject, pk=self.kwargs["pk"])
         if not Question.objects.filter(quiz=self.quiz).exists():
             messages.warning(request, "This quiz has no questions available.")
-            return redirect("quiz_index", slug=self.course.slug)
+            return redirect("quiz_index", slug=self.course.ref)
 
         self.sitting = Sitting.objects.user_sitting(
             request.user, self.quiz, self.course
@@ -245,7 +257,7 @@ class QuizTake(FormView):
                 request,
                 "You have already completed this quiz. Only one attempt is permitted.",
             )
-            return redirect("quiz_index", slug=self.course.slug)
+            return redirect("quiz_index", slug=self.course.ref)
 
         # Set self.question and self.progress here
         self.question = self.sitting.get_first_question()

@@ -27,7 +27,7 @@ class QuizAddForm(forms.ModelForm):
     class Meta:
         model = Quiz
         exclude = []
-
+    
     questions = forms.ModelMultipleChoiceField(
         queryset=Question.objects.all().select_subclasses(),
         required=False,
@@ -42,7 +42,7 @@ class QuizAddForm(forms.ModelForm):
                 self.instance.question_set.all().select_subclasses()
             )
 
-    def save(self, commit=True):
+    def save(self, commit=True):        
         quiz = super(QuizAddForm, self).save(commit=False)
         quiz.save()
         quiz.question_set.set(self.cleaned_data["questions"])

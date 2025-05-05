@@ -20,15 +20,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
-
 # Create a Config object
 # config = Config()
-
-
-
-
-
-
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config(
@@ -131,7 +124,7 @@ DATABASES = {
     
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'aimswith',  # Replace with your actual database name
+        'NAME': 'aai430',  # Replace with your actual database name
         'USER': 'aims',      # XAMPP uses 'root' by default for MySQL
         'PASSWORD': '12345J@s0n',      # XAMPP's MySQL 'root' user has no password by default, but add one if you’ve set it
         'HOST': 'localhost', # This points to your local MySQL server in XAMPP
