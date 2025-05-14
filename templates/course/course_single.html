@@ -89,11 +89,11 @@
                             {% if request.user.is_superuser or request.user.is_lecturer %}
                             <td>
                                 <div class="update-delete">
-                                    <a href="{% url 'upload_video_edit' slug=course.ref video_slug=video.slug %}"
+                                    <a href="{% url 'upload_video_edit' ref=course.ref video_slug=video.slug %}"
                                         class="update" title="{% trans 'Edit' %}">
                                         <i class="fas fa-pencil-alt"></i>
                                     </a>
-                                    <a href="{% url 'upload_video_delete' slug=course.ref video_slug=video.slug %}"
+                                    <a href="{% url 'upload_video_delete' ref=course.ref video_slug=video.slug %}"
                                         class="delete" title="{% trans 'Delete' %}">
                                         <i class="fas fa-trash-alt"></i>
                                     </a>

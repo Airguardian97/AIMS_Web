@@ -478,12 +478,14 @@ def handle_video_edit(request, slug, video_slug):
 
 @login_required
 @lecturer_required
-def handle_video_delete(request, slug, video_slug):
+def handle_video_delete(request, ref, video_slug):
+    print(ref)
+    print(video_slug)
     video = get_object_or_404(UploadVideo, slug=video_slug)
     title = video.title
     video.delete()
     messages.success(request, f"{title} has been deleted.")
-    return redirect("course_detail", slug=slug)
+    return redirect("course_detail", ref=ref)
 
 
 # ########################################################

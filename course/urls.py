@@ -72,12 +72,12 @@ urlpatterns = [
         name="video_single",
     ),
     path(
-        "course/<slug>/video_tutorials/<video_slug>/edit/",
+        "course/<ref>/video_tutorials/<video_slug>/edit/",
         views.handle_video_edit,
         name="upload_video_edit",
     ),
     path(
-        "course/<slug>/video_tutorials/<video_slug>/delete/",
+        "course/<ref>/video_tutorials/<video_slug>/delete/",
         views.handle_video_delete,
         name="upload_video_delete",
     ),
