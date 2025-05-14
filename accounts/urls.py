@@ -78,7 +78,7 @@ urlpatterns = [
     # path('profile/<int:pk>/change-password/', changePasswordView, name='change_password'),
     # ################################################################
     # path('login/', LoginView.as_view(), name='login'),
-    # path('logout/', LogoutView.as_view(), name='logout', kwargs={'next_page': '/'}),
+    path('logout/', LogoutView.as_view(), name='logout', kwargs={'next_page': '/'}),
     # path('password-reset/', PasswordResetView.as_view(
     #     form_class=EmailValidationOnForgotPassword,
     #     template_name='registration/password_reset.html'
