@@ -43,8 +43,8 @@
                     <th> {% trans 'Course Name' %} </th>
                     <th> {% trans 'Course Code' %} </th>
                     <th> {% trans 'Cr.Hr' %} </th>
-                    <th> {% trans 'Level' %} </th>
-                    <th> {% trans 'Year' %} </th>
+                    <th> {% trans 'Room' %} </th>
+                    <th> {% trans 'Time' %} </th>
                     <th> {% trans 'Semester' %} </th>
                     <th> {% trans 'Current Semester' %} </th>
                     {% if request.user.is_superuser %}
@@ -58,10 +58,10 @@
                     <td>{{ forloop.counter }}.</td>
                     <td><a href="{{ course.get_absolute_url }}">
                         {{ course.sub_name }}</a></td>
-                    <td>{{ course.code }}</td>
+                    <td>{{ course.subject_code }}</td>
                     <td>{{ course.credit }}</td>
-                    <td>{{ course.level }}</td>
-                    <td>{{ course.year }}</td>
+                    <td>{{ course.sub_room }}</td>
+                    <td>{{ course.sub_time }}</td>
                     <td>{{ course.semester }}</td>
                     <th>
                         {% if course.is_current_semester == False %}

@@ -92,6 +92,7 @@
 		</div>
 		{% url 'home' as hom %} {% url 'dashboard' as dash %} {% url 'profile' as prof %}
 		{% url 'lecturer_list' as lec %}
+		{% url 'parents_list' as pert %}
 		{% url 'student_list' as stu %} {% url 'course_allocation_view' as cav %}
 		{% url 'programs' as pro %} {% url 'session_list' as sess %} {% url 'semester_list' as sem %}
 		{% url 'add_score' as ascore %} {% url 'grade_results' as vr %}{% url 'ass_results' as ar %}
@@ -124,6 +125,9 @@
 			<li class="{% if request.path == stu %}active{% endif %}">
 				<a href="{% url 'student_list' %}"><i class="fas fa-user-graduate"></i>{% trans 'Students' %}</a>
 			</li>
+			<li class="{% if request.path == pert %}active{% endif %}">
+				<a href="{% url 'parents_list' %}"><i class="fas fas fa-people-roof"></i>{% trans 'Parents' %}</a>
+			</li>
 			{% endif %}
 
 			{% if request.user.is_lecturer or request.user.is_student %}
@@ -155,7 +159,7 @@
 			<li class="{% if request.path == qpr %}active{% endif %}">
 				<a href="{% url 'quiz_progress' %}"><i class="fas fa-record-vinyl"></i>{% trans 'Quiz Progress Rec' %}</a>
 			</li>
-			<li class="{% if request.path == cav %}active{% endif %}">
+			{% comment %} <li class="{% if request.path == cav %}active{% endif %}">
 				<a href="{% url 'course_allocation_view' %}"><i class="fas fa-tasks"></i>{% trans 'Course Allocation' %}</a>
 			</li>
 			<li class="{% if request.path == sess %}active{% endif %}">
@@ -163,7 +167,7 @@
 			</li>
 			<li class="{% if request.path == sem %}active{% endif %}">
 				<a href="{% url 'semester_list' %}"><i class="fas fa-calendar-alt"></i>{% trans 'Manage Semester' %}</a>
-			</li>
+			</li> {% endcomment %}
 			{% endif %}
 
 			{% if request.user.is_lecturer %}
@@ -172,13 +176,11 @@
 			</li>
 			{% endif %}
 
-			{% if request.user.is_student %}
+			{% if request.user.is_student  %}
 			<li class="{% if request.path == qpr %}active{% endif %}">
 				<a href="{% url 'quiz_progress' %}"><i class="fas fa-record-vinyl"></i>{% trans 'Quiz Progress Rec' %}</a>
 			</li>
-			<li class="{% if request.path == vr %}active{% endif %}">
-				<a href="{% url 'grade_results' %}"><i class="fa fa-spell-check"></i>{% trans 'Grade Results' %}</a>
-			</li>
+		
 			<li class="{% if request.path == ar %}active{% endif %}">
 				<a href="{% url 'ass_results' %}"><i class="fa fa-list-ol"></i> {% trans 'Assesment Results' %}</a>
 			</li>
@@ -187,8 +189,13 @@
 			</li>
 			{% endif %}
 
-
-
+			{% if request.user.is_parent or request.user.is_student %}			
+		
+		
+			<li class="{% if request.path == vr %}active{% endif %}">
+				<a href="{% url 'grade_results' %}"><i class="fa fa-spell-check"></i>{% trans 'Grade Results' %}</a>
+			</li>
+			{% endif %}
 
 
 
@@ -206,7 +213,7 @@
 	<footer class="card-footer mt-5 pt-3 pb-5 px-2">
 		<div class="col-12">
 
-			<form action="{% url 'set_language' %}" method="post" id="lang-form">{% csrf_token %}
+			{% comment %} <form action="{% url 'set_language' %}" method="post" id="lang-form">{% csrf_token %}
 				<input name="next" type="hidden" value="{{ redirect_to }}">
 				<select class="small" name="language" id="lang-select">
 					{% get_current_language as LANGUAGE_CODE %}
@@ -218,10 +225,10 @@
 						</option>
 					{% endfor %}
 				</select>
-			</form>
+			</form> {% endcomment %}
 
 			<p class="small m-0">
-				{% trans 'Read our' %} <a href="#"> {% trans 'Privacy' %} </a> {% trans 'and' %} <a href="#"> {% trans 'Terms of use.' %} </a>
+				{% comment %} {% trans 'Read our' %} <a href="#"> {% trans 'Privacy' %} </a> {% trans 'and' %} <a href="#"> {% trans 'Terms of use.' %} </a> {% endcomment %}
 				<br />AGTECH &copy; <script>document.write(new Date().getFullYear());</script>
 				<br />
 			</p>

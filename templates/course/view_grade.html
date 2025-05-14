@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Grades for <strong>{{ course.course_title }}</strong></h2>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered align-middle">
+                <thead class="table-striped text-center">
+                    <tr>
+                        <th>Student</th>
+                        {% for period in grading_periods %}
+                            <th>{{ period|title }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                        <tr>
+                            <td><strong>{{ student.first_name }} {{ student.last_name }}</strong></td>
+                            {% for period in grading_periods %}
+                                <td>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        {% with student_grades|get_item:student.ref|get_item:period as grade %}
+                                            <input type="text" name="grade_{{ student.ref }}_{{ period }}" 
+                                                   value="{% if grade != 'No grade' %}{{ grade }}{% endif %}" 
+                                                   placeholder="Add grade" class="form-control me-2" style="max-width: 100px;">
+                                            {% if grade != 'No grade' %}
+                                                <a href="{% url 'delete_grade' student.ref course.ref period %}" 
+                                                   class="btn btn-sm btn-outline-danger"
+                                                   title="Delete grade"
+                                                   onclick="return confirm('Are you sure you want to delete this grade?');">
+                                                    🗑️
+                                                </a>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </div>
+                                </td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <button type="submit" class="btn btn-success mt-3">💾 Save Grades</button>
+    </form>
+</div>
+{% endblock %}

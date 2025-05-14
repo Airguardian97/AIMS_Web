@@ -1,10 +1,13 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
 {% load i18n %}
-{% block title %}{{ title }} | {% trans 'Learning management system' %}{% endblock title %}
+
+{% block title %}
+    {{ title }} | {% trans 'Learning management system' %}
+{% endblock title %}
 
 {% block content %}
-
-<nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+{% comment %} <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
   <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="/">{% trans 'Home' %}</a></li>
       <li class="breadcrumb-item active" aria-current="page">{% trans 'Grade Results' %}</li>
@@ -12,173 +15,91 @@
 </nav>
 
 {% include 'snippets/messages.html' %}
-
-<div class="title-1"><i class="fas fa-table"></i>{% trans 'Grade Results' %}</div>
-<p>{{ student.level }} {% trans 'Result' %}</p>
-
-<div class="table-responsive">
-  <div class="table-title"><u>{% trans 'First Semester:' %}</u></div>
-  <table class="table table-light">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>{% trans 'Course Title' %}</th>
-        <th>{% trans 'Course Code' %}</th>
-        <th>{% trans 'Cr.Hr' %}</th>
-        <th>{% trans 'Grade' %}</th>
-        <th>{% trans 'Points' %}</th>
-        <th>{% trans 'Comment' %}</th>
-      </tr>
-    </thead>
-    {% for course in courses %}
-    {% if course.course.semester == "First" %}
-    <tbody>
-      <tr class="{% if forloop.counter|divisibleby:2 %}bg-gray{% endif %}">
-        <th>{{ forloop.counter }}</th>
-        <td><a href="{{ course.course.get_absolute_url }}">{{ course.course.title }}</a></td>
-        <td>{{ course.course.code }}</td>
-        <td>{{ course.course.credit }}</td>
-
-        <td class="{% if course.grade == 'F' %}danger{% else %}success{% endif %}">{{ course.grade }}</td>
-        <td>{{ course.point }}</td>
-
-        {% if course.comment == 'PASS' %}
-          <td class="success"><i class="fas fa-check-circle"></i>{% trans 'PASS' %}</td>
-        {% elif course.comment == 'FAIL' %}
-          <td class="danger"><i class="fas fa-exclamation-circle"></i>{% trans 'FAIL' %}</td>
-        {% else %}
-          <td></td>
-        {% endif %}
-
-      </tr>
-    </tbody>
-    {% endif %}
-    {% endfor %}
-
-    {% for result in results %}
-    {% if result.semester == "First" %}
-    <tr style="background: #f3f2f2;">
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th>{% trans 'Total first semester credit:' %} {{ total_first_semester_credit }}</th>
-    </tr>
-    <tr class="bg-orange text-white">
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th>{% trans 'First Semester GPA:' %} {{ result.gpa }}</th>
-    </tr>
-    {% endif %}
-    {% endfor %}
-
-  </table>
-</div>
   
-<div class="table-responsive p-0 px-2 mt-3">
-  <div class="table-title"><u>{% trans 'Second Semester:' %}</u></div>
-  <table class="table table-light">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>{% trans 'Course Title' %}</th>
-        <th>{% trans 'Course Code' %}</th>
-        <th>{% trans 'Cr.Hr' %}</th>
-        <th>{% trans 'GRADE' %}</th>
-        <th>{% trans 'Points' %}</th>
-        <th>{% trans 'Comment' %}</th>
-      </tr>
-    </thead>
-    {% for course in courses %}
-    {% if course.course.semester == "Second" %}
-    <tbody>
-      <tr>
-        <th>{{ forloop.counter }}</th>
-        <td><a href="{{ course.course.get_absolute_url }}">{{ course.course.title }}</a></td>
-        <td>{{ course.course.code }}</td>
-        <td>{{ course.course.credit }}</td>
-        
-        <td class="{% if course.grade == 'F' %}danger{% else %}success{% endif %}">{{ course.grade }}</td>
-        <td>{{ course.point }}</td>
-        
-        {% if course.comment == 'PASS' %}
-          <td class="success"><i class="fas fa-check-circle"></i>{% trans 'PASS' %}</td>
-        {% elif course.comment == 'FAIL' %}
-          <td class="danger"><i class="fas fa-exclamation-circle"></i>{% trans 'FAIL' %}</td>
-        {% else %}
-          <td></td>
-        {% endif %}
 
-      </tr>
-    </tbody>
-    {% endif %}
+<div class="title-1"><i class="fas fa-table"></i> {% trans 'Grade Results' %}</div>
+<p>{{ student.level }} {% trans 'Result' %}</p> {% endcomment %}
+
+{% if students|length > 1 %}
+<form method="get" class="mb-3">
+  <label for="student">Select Student:</label>
+  <select name="student_ref" onchange="this.form.submit()" class="form-select w-auto d-inline-block ms-2">
+    {% for student in students %}
+      <option value="{{ student.ref }}" {% if selected_student and student.ref == selected_student.ref %}selected{% endif %}>
+        {{ student.last_name }}, {{ student.first_name }}
+      </option>
     {% endfor %}
-    
-    {% for result in results %}
-    {% if result.semester == "Second" %}
-    <tr style="background: #f3f2f2;">
-      <th></th>
-      <th>{% trans 'Total second semester credit:' %} {{ total_sec_semester_credit }}</th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th>{% trans 'Total Credit:' %} {{ total_first_and_second_semester_credit }}</th>
-    </tr>
-    <tr style="background: #f3f2f2;">
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th>{% trans 'Second Semester GPA:' %} {{ result.gpa }}</th>
-    </tr>
-    <tr style="background: #fd7e14; color: #fff;">
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th>{% trans 'Previous CGPA:' %} {{ previousCGPA }}</th>
-    </tr>
-    {% endif %}
-    {% endfor %}
+  </select>
+</form>
+{% endif %}
 
-  </table>
-</div>
 
-<br>
-<tbody>
-  {% for result in results %}
-  {% if result.semester == "First" %}
-  <tr>
-    <th></th>
-    <th></th>
-    <th><label>{% trans 'First Semester GPA:' %}</label> {{ result.gpa }}</th>
-  </tr>
-  <br>
-  {% elif result.semester == "Second" %}
-    <tr>
-    <th></th>
-    <th></th>
-    <th><label>{% trans 'Second Semester GPA:' %}</label> {{ result.gpa }}</th>
-  </tr>
-  <br>
-  {% endif %}
-  {% endfor %}
-  <tr>
-    <th></th>
-    <th></th>
-    <th><label>{% trans 'Previous CGPA:' %}</label> {{ previousCGPA }}</th>
-  </tr>
-</tbody>
+
+    <div class="table-responsive">
+        <div class="table-title"><u>{% trans 'Academic Year:' %} {{ academic_year }}</u></div>
+
+
+
+        
+        <table class="table table-light">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>{% trans 'Course Title' %}</th>
+                    <th>{% trans 'Course Code' %}</th>
+                    
+                    {% for period in grading_periods %}
+                        <th>{{ period|title }}</th>
+                    {% endfor %}
+                    <th>{% trans 'Points' %}</th>
+                    <th>{% trans 'Comment' %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in results %}
+                    {% for course in courses %}
+                        <tr class="{% if forloop.counter|divisibleby:2 %}bg-gray{% endif %}">
+                            <th>{{ forloop.counter }}</th>
+                            <td><a href="{{ course.get_absolute_url }}">{{ course.subject.sub_name }}</a></td>
+                            <td>{{ course.subject.subject_code }}</td>
+                                        
+                            {% for period in grading_periods %}
+                            <td>
+                                {% with key=course.subject.ref|stringformat:"s"|add:","|add:period %}
+                                    {{ grade_dict|get_grade:key|default:"-" }}
+                                {% endwith %}
+                            </td>
+                             {% endfor %}
+                        
+
+                                    
+                            
+                            <td>{{ course.point }}</td>
+                            <td>
+                                {% if course.comment == 'PASS' %}
+                                    <i class="fas fa-check-circle"></i> {% trans 'PASS' %}
+                                {% elif course.comment == 'FAIL' %}
+                                    <i class="fas fa-exclamation-circle"></i> {% trans 'FAIL' %}
+                                {% else %}
+                                    <span>{{ course.comment }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+
+                        {% comment %} <tr>
+                            <td colspan="7">
+                                <strong>{% trans 'Recorded Grade:' %}</strong>
+                                {{ grade_dict|get_item:course.subject.subject_code|default:"N/A" }}
+                            </td>
+                        </tr> {% endcomment %}
+                    {% endfor %}
+                    <tr>
+                        <td colspan="6" class="text-end"><strong>{% trans 'GPA:' %}</strong></td>
+                        <td><strong>{{ result.gpa }}</strong></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 <br>
 {% endblock %}

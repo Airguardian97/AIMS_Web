@@ -84,5 +84,11 @@ urlpatterns = [
     # course registration
     path("course/registration/", views.course_registration, name="course_registration"),
     path("course/drop/", views.course_drop, name="course_drop"),
-    path("my_courses/", views.user_course_list, name="user_course_list"),
+    path("my_courses/", views.user_course_list, name="user_course_list"),    
+    
+    path('programs/grade/<int:course_id>/', views.view_grade, name='view_grade'),
+    # In urls.py
+    path('grade/delete/<int:student_id>/<int:course_id>/<str:period>/', views.delete_grade, name='delete_grade'),
+
 ]
+

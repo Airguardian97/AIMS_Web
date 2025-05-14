@@ -1,6 +1,8 @@
 from django import forms
 from accounts.models import User
 from .models import Program, Course, CourseAllocation, Upload, UploadVideo
+from .importmodels import Grade
+from django.forms import modelformset_factory
 
 
 class ProgramForm(forms.ModelForm):
@@ -105,3 +107,22 @@ class UploadFormVideo(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["title"].widget.attrs.update({"class": "form-control"})
         self.fields["video"].widget.attrs.update({"class": "form-control"})
+        
+        
+class GradeForm(forms.ModelForm):
+    student_ref = forms.IntegerField(widget=forms.HiddenInput())
+    grading_period = forms.CharField(widget=forms.HiddenInput())
+
+    class Meta:
+        model = Grade
+        fields = ['stud_grade', 'student_ref', 'grading_period']
+        widgets = {
+            'stud_grade': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+        }
+
+GradeFormSet = modelformset_factory(
+    Grade,
+    form=GradeForm,
+    extra=0,
+    can_delete=False
+)

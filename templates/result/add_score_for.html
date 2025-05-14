@@ -19,7 +19,7 @@
     </button>
     <div class="dropdown-menu">
         {% for course in courses %}
-            <a class="dropdown-item" href="{% url 'add_score_for' course.id %}" title="{{ course.code }}">{{ course.title }}</a>
+            <a class="dropdown-item" href="{% url 'add_score_for' course.ref %}" title="{{ course.subject_code }}">{{ course.sub_name }}</a>
         {% empty %}
             <p class="dropdown-item">{% trans 'No course.' %}</p>
         {% endfor %}
@@ -36,7 +36,7 @@
     {% csrf_token %}
     <div class="btn-flex">
         <button title="Save Score" type="submit" class="btn btn-primary">{% trans 'Save' %}</button>
-        <a target="_blank" href="{% url 'result_sheet_pdf_view' id=course.id %}">
+        <a target="_blank" href="{% url 'result_sheet_pdf_view' id=course.ref %}">
             <span data-toggle="tooltip" title="Print Result sheet" class="btn btn-warning">
                 <i class="far fa-file-pdf"></i> {% trans 'Grade report' %}
             </span>
@@ -65,21 +65,26 @@
                 {% for student in students %}
                 <tr>
                     <td>{{ forloop.counter }}</td>
-                    <td><a href="{{ student.student.student.get_absolute_url }}">{{ student.student.student.username }}</a></td>
                     <td>
-                        <input id="assignment" type="number" name="{{ student.id }}" value="{{ student.assignment }}" width="20px">
+                        <a href="{{ student.student.student.get_absolute_url }}">
+                          {{ student.first_name }} {{ student.last_name }} {{ student.middle_name }}
+                        </a>
+                      </td>
+                      
+                    <td>
+                        <input id="assignment" type="number" name="{{ student.ref }}" value="{{ student.assignment }}" width="20px">
                     </td>
                     <td>
-                        <input id="mid_exam" type="number" name="{{ student.id }}" value="{{ student.mid_exam }}">
+                        <input id="mid_exam" type="number" name="{{ student.ref }}" value="{{ student.mid_exam }}">
                     </td>
                     <td>
-                        <input id="quiz" type="number" name="{{ student.id }}" value="{{ student.quiz }}">
+                        <input id="quiz" type="number" name="{{ student.ref }}" value="{{ student.quiz }}">
                     </td>
                     <td>
-                        <input id="attendance" type="number" name="{{ student.id }}" value="{{ student.attendance }}">
+                        <input id="attendance" type="number" name="{{ student.ref }}" value="{{ student.attendance }}">
                     </td>
                     <td>
-                        <input id="final_exam" type="number" name="{{ student.id }}" value="{{ student.final_exam }}">
+                        <input id="final_exam" type="number" name="{{ student.ref }}" value="{{ student.final_exam }}">
                     </td>
                     <td>{{ student.total }}</td>
 

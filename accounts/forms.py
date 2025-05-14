@@ -7,6 +7,7 @@ from django.contrib.auth.forms import (
 from django.contrib.auth.forms import PasswordResetForm
 from course.models import Program
 from .models import User, Student, Parent, RELATION_SHIP, LEVEL, GENDERS, Lecturer
+from course.importmodels import Student as Student2
 
 
 class StaffAddForm(UserCreationForm):
@@ -216,17 +217,15 @@ class StudentAddForm(UserCreationForm):
         ),
     )
     
-    studid = forms.CharField(
-        max_length=30,
-        widget=forms.TextInput(
-            attrs={
-                "type": "text",
-                "class": "form-control",
-            }
+    studid = forms.ModelChoiceField(
+        queryset=Student2.objects.exclude(ref__in=Student.objects.values('stud_id')),  # Exclude students already in Student model
+        to_field_name='ref',  # This ensures that 'ref' is saved when submitted
+        widget=forms.Select(
+            attrs={"class": "browser-default custom-select form-control"}
         ),
         label="Student ID",
     )
-
+    
 
     program = forms.ModelChoiceField(
         queryset=Program.objects.all(),
@@ -296,7 +295,7 @@ class StudentAddForm(UserCreationForm):
                 student=user,
                 level=self.cleaned_data.get("level"),
                 program=self.cleaned_data.get("program"),
-                stud_id=self.cleaned_data.get("studid"),
+                stud_id=self.cleaned_data.get("studid").ref,
             )
 
         return user
@@ -369,6 +368,7 @@ class ProfileUpdateForm(UserChangeForm):
     )
     
     teacherid = forms.CharField(
+        required=False,
         widget=forms.TextInput(
             attrs={
                 "type": "text",

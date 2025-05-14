@@ -71,3 +71,14 @@ def student_required(
         return redirect(redirect_to)
 
     return wrapper if function else test_func
+
+def parent_required(function=None, redirect_to="/"):
+    def test_func(user):
+        return user.is_active and (user.is_parent or user.is_superuser)
+
+    def wrapper(request, *args, **kwargs):
+        if test_func(request.user):
+            return function(request, *args, **kwargs) if function else None
+        return redirect(redirect_to)
+
+    return wrapper if function else test_func

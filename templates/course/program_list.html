@@ -42,10 +42,12 @@
                     <td>{{ forloop.counter }}.</td>
                     <td>
                         <a class="a-list" href="{{ program.get_absolute_url }}">
-                            {{ program.grade_level}}
+                            {{ program.grade_level}}  {{ program.section}}
                         </a>
                     </td>
-                    <td>{{ program.summary }} </td>
+                    <td>{{ program.adviser }} </td>
+                        
+
                     {% if request.user.is_superuser %}
                     <td>
                         <div class="dropdown">

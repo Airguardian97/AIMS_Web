@@ -10,9 +10,10 @@ from django_filters.views import FilterView
 from django.db.models import F, Q
 from django.db.models import Max
 from django.db.models import Value, F, CharField
-
-
-from accounts.decorators import lecturer_required, student_required
+from django.db.models import OuterRef, Subquery
+from datetime import datetime
+from django.db import IntegrityError
+from accounts.decorators import lecturer_required, student_required, parent_required
 # from accounts.models import Student
 from core.models import Semester
 from course.filters import CourseAllocationFilter, ProgramFilter, GradelevelsFilter
@@ -25,7 +26,7 @@ from course.forms import (
     UploadFormVideo,
 )
 from course.models import (
-    Course,
+    # Course,
     CourseAllocation,
     Program,
     Upload,
@@ -33,7 +34,7 @@ from course.models import (
 )
 
 from course.importmodels import (
-    Subject,
+    Subject as Course,
     Gradelevels,
     Studentregister,
     Studentenrollsubject,
@@ -43,7 +44,9 @@ from course.importmodels import (
     Parent,
     Parentstudent,
     Scharges,
-    Spayment
+    Spayment,
+    Grade,
+    Benefits
 )
 from result.models import TakenCourse
 
@@ -55,9 +58,12 @@ from result.models import TakenCourse
 
 @method_decorator([login_required, lecturer_required], name="dispatch")
 class ProgramFilterView(FilterView):
-    filterset_class = GradelevelsFilter
+    filterset_class = GradelevelsFilter    
     template_name = "course/program_list.html"
-
+    
+    # if not self.request.user.is_superuser:
+    #     filterset_class = GradelevelsFilter   
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["title"] = "Programs"
@@ -84,7 +90,7 @@ def program_add(request):
 @login_required
 def program_detail(request, pk):
     program = get_object_or_404(Gradelevels, ref=pk)    
-    courses = Subject.objects.filter(grade_level=pk)
+    courses = Course.objects.filter(grade_level=pk)
     print(pk)
     # credits = {courses.aggregate(total_credits=Sum("credit"))}
     credits = {}
@@ -112,7 +118,7 @@ def view_attendance(request, course_id):
 
     
 # Get all enrolled sr_id from Studentenrollsubject
-    enrolled_ids = Studentenrollsubject.objects.filter(subject_code=course_id).values_list('sr_id', flat=True)
+    enrolled_ids = Studentenrollsubject.objects.filter(subject=course_id).values_list('sr_id', flat=True)
 
     # Get all students register entries
     students_register = Studentregister.objects.filter(sr_id__in=enrolled_ids)
@@ -120,7 +126,7 @@ def view_attendance(request, course_id):
     # Get all students from Student table
     students = Student.objects.filter(ref__in=students_register.values_list('stud_id', flat=True))
     
-    course = get_object_or_404(Subject, ref=course_id)    
+    course = get_object_or_404(Course, ref=course_id)    
     
     
     # print(course_id)
@@ -147,7 +153,7 @@ def save_attendance(request, course_id):
             messages.error(request, "Attendance date is required!")
             return redirect('program_detail', pk=course_id)
         
-        course = get_object_or_404(Subject, ref=course_id)
+        course = get_object_or_404(Course, ref=course_id)
 
         # Fetch enrolled students
         enrolled_ids = Studentenrollsubject.objects.filter(subject_code=course_id).values_list('sr_id', flat=True)
@@ -208,11 +214,11 @@ def program_delete(request, pk):
 
 @login_required
 def course_single(request, ref):
-    course = get_object_or_404(Subject, ref=ref)
+    course = get_object_or_404(Course, ref=ref)
     files = Upload.objects.filter(course_id=ref)
    
     videos = UploadVideo.objects.filter(course_id=ref)
-    lecturers = Teacher.objects.get(teacher_id=course.teacher_id)
+    lecturers = Teacher.objects.get(ref=course.teacher_id)
     
     return render(
         request,
@@ -358,7 +364,7 @@ def deallocate_course(request, pk):
 @lecturer_required
 def handle_file_upload(request, ref):
     
-    course = get_object_or_404(Subject, ref=ref)
+    course = get_object_or_404(Course, ref=ref)
     if request.method == "POST":
         form = UploadFormFile(request.POST, request.FILES)
         if form.is_valid():
@@ -417,7 +423,7 @@ def handle_file_delete(request, slug, file_id):
 @login_required
 @lecturer_required
 def handle_video_upload(request, ref):
-    course = get_object_or_404(Subject, ref=ref)
+    course = get_object_or_404(Course, ref=ref)
     if request.method == "POST":
         form = UploadFormVideo(request.POST, request.FILES)
         if form.is_valid():
@@ -440,7 +446,7 @@ def handle_video_upload(request, ref):
 def handle_video_single(request, ref, video_slug):
     print("asdadasdasdasdasdadads",video_slug)
     name = video_slug
-    course = get_object_or_404(Subject, ref=ref)
+    course = get_object_or_404(Course, ref=ref)
     video = get_object_or_404(UploadVideo, slug=name)
     return render(
         request,
@@ -505,32 +511,28 @@ def course_registration(request):
         current_semester = Semester.objects.filter(is_current_semester=True).first()
         if not current_semester:
             messages.error(request, "No active semester found.")
-            return render(request, "course/course_registration.html")
+            return render(request, "course/course_registration.html")   
 
         # student = Student.objects.get(student__pk=request.user.id)
-        student = get_object_or_404(Student, student__id=request.user.id)
-        taken_courses = TakenCourse.objects.filter(student__student__id=request.user.id)
+        student = get_object_or_404(Student, ref=request.user.student.stud_id)
+        taken_courses = TakenCourse.objects.filter(student_id=request.user.student.stud_id)
         t = ()
         for i in taken_courses:
             t += (i.course.pk,)
 
         courses = (
             Course.objects.filter(
-                program__pk=student.program.id,
-                level=student.level,
-                semester=current_semester,
+                grade_level=1
             )
-            .exclude(id__in=t)
-            .order_by("year")
-        )
+        )############
         all_courses = Course.objects.filter(
-            level=student.level, program__pk=student.program.id
+            grade_level=1 #############
         )
 
         no_course_is_registered = False  # Check if no course is registered
         all_courses_are_registered = False
 
-        registered_courses = Course.objects.filter(level=student.level).filter(id__in=t)
+        registered_courses = Course.objects.filter(grade_level=1)
         if (
             registered_courses.count() == 0
         ):  # Check if number of registered courses is 0
@@ -543,12 +545,12 @@ def course_registration(request):
         total_sec_semester_credit = 0
         total_registered_credit = 0
         for i in courses:
-            if i.semester == "First":
-                total_first_semester_credit += int(i.credit)
-            if i.semester == "Second":
-                total_sec_semester_credit += int(i.credit)
+            # if i.semester == "First":
+            total_first_semester_credit += int(1)
+            # if i.semester == "Second":
+            total_sec_semester_credit += int(1)
         for i in registered_courses:
-            total_registered_credit += int(i.credit)
+            total_registered_credit += int(1)
         context = {
             "is_calender_on": True,
             "all_courses_are_registered": all_courses_are_registered,
@@ -586,22 +588,40 @@ def course_drop(request):
 @login_required
 def user_course_list(request):
     if request.user.is_lecturer:
-        courses = Subject.objects.filter(teacher_id=request.user.lecturer.teacherid)
+        # courses = Course.objects.filter(teacher_id=request.user.lecturer.teacherid)
+        section_subquery = Gradelevels.objects.filter(
+            ref=OuterRef('grade_level')
+        ).values('section')[:1]
+
+        courses = Course.objects.annotate(
+            gradelevel_section=Subquery(section_subquery)
+        ).filter(teacher_id=request.user.lecturer.teacherid)
+        
+        for course in courses:
+            print(course.sub_name, course.gradelevel_section)
+
         return render(request, "course/user_course_list.html", {"courses": courses})
 
     if request.user.is_student:
-        student = get_object_or_404(Student, ref="1")                   
+        student = get_object_or_404(Student, ref=request.user.student.stud_id)
+                           
         
 
         # Query to get subjects related to the student with ref = 1
-        taken_courses = Subject.objects.filter(
-            ref__in=Studentenrollsubject.objects.filter(
-                sr_id__in=Studentregister.objects.filter(
-                    stud_id=Student.objects.get(ref=1).ref  # Matching stud_id with studentid
-                ).values('sr_id')
-            ).values('subject_code')
-        )
-
+        # taken_courses = Course.objects.filter(
+        #     ref__in=Studentenrollsubject.objects.filter(
+        #         sr_id__in=Studentregister.objects.filter(
+        #             stud_id=Student.objects.get(ref=request.user.student.stud_id).ref  # Matching stud_id with studentid
+        #         ).values('sr_id')
+        #     ).values('subject_code')
+        # )
+        
+        taken_courses = Studentenrollsubject.objects.filter(sr__stud_id=request.user.student.stud_id).select_related('sr', 'subject')
+        
+        
+        
+        
+        # print(taken_courses)
         # print(subjects)
         # taken_courses = Studentenrollsubject.objects.filter(sr_id=student.studentid)
         return render(
@@ -616,7 +636,7 @@ def user_course_list(request):
 
 
 
-
+@login_required
 def student_soa(request):
     user_email = request.user.email
     students = []
@@ -624,50 +644,39 @@ def student_soa(request):
     student_info = {}
     transactions = []
     net_balance = 0.0
-    
+
     try:
-        # Fetch parent based on user email
-        parents = Parent.objects.filter(email_address=user_email)        
-        if not parents.exists():
-            print("Parent not found for the given email.")
-            return render(request, 'school/error.html', {'message': 'Parent not found.'})
-
-        parent = parents.first()  # Select the first parent if multiple exist for now
-
-        # Fetch associated students
-        parent_students = Parentstudent.objects.filter(gid=parent.pid)
-
-        if parent_students.exists():
-            students = Student.objects.filter(ref__in=[ps.stud_id for ps in parent_students])
-            if students.exists():
-                print("Students found:", students)
-            else:
-                print("No students found for this parent.")
-        else:
-            print("No student records associated with this parent.")
-
-        # Get the selected student from the GET request
         student_ref = request.GET.get('student_ref')
         print(student_ref)
-        # If there's a selected student, filter by the selected student reference
-        if student_ref:
-            selected_student = students.get(ref=student_ref)  # This will raise an exception if not found
-            print("Selected student:", selected_student)
+        if request.user.is_student:
+            student_ref = request.user.student.stud_id
+            students = [request.user.student]
         else:
-            selected_student = students.first()  # Set the first student as default if none selected
+            parents = Parent.objects.filter(email_address=user_email)
+            if not parents.exists():
+                return render(request, 'school/error.html', {'message': 'Parent not found.'})
+            parent = parents.first()
 
-        # Fetch the latest Studentregister data for the selected student
+            parent_students = Parentstudent.objects.filter(gid=parent.pid)
+            students = Student.objects.filter(ref__in=[ps.stud_id for ps in parent_students])
+
+        if student_ref:
+            try:
+                selected_student = Student.objects.get(ref=student_ref)
+            except Student.DoesNotExist:
+                selected_student = students.first()
+        else:
+            selected_student = students.first()
+
         latest_register = None
         if selected_student:
             latest_register = (
                 Studentregister.objects.filter(stud_id=selected_student.ref)
-                .annotate(latest_date=Max('dor'))  # Replace 'dor' with the correct field name
+                .annotate(latest_date=Max('dor'))
                 .order_by('-latest_date')
                 .first()
             )
-            print("Latest register:", latest_register)
 
-        # Prepare student information including grade level from Studentregister
         if selected_student:
             student_info = {
                 'lrn_no': selected_student.lrn_no,
@@ -676,43 +685,75 @@ def student_soa(request):
                 'voucher': selected_student.if_voucher,
             }
 
-            # Retrieve charges and payments
-            start_date = '2024-06-01'
+            # Date range
+            start_date = '2024-05-08'
             end_date = '2026-12-01'
 
-            queryset_charges = Scharges.objects.filter(stud_id=selected_student.ref, date__range=[start_date, end_date])
-            queryset_payments = Spayment.objects.filter(stud_id=selected_student.ref, date__range=[start_date, end_date])
+            # Previous totals
+            prev_charges = Scharges.objects.filter(stud_id=selected_student.ref, date__lt=start_date).aggregate(total=Sum('amount'))['total'] or 0
+            prev_payments = Spayment.objects.filter(stud_id=selected_student.ref, date__lt=start_date).aggregate(total=Sum('amount'))['total'] or 0
+            prev_benefits = Benefits.objects.filter(stud_id=selected_student.ref, date__lt=start_date).aggregate(total=Sum('amount'))['total'] or 0
+            prev_balance = prev_charges - (prev_payments + prev_benefits)
 
-            # Combine and prepare transactions for display
-            charges = queryset_charges.annotate(
-                c_amount=F('amount'),
-                p_amount=Value(0),
-                transaction_type=Value('Charge')
-            )
-            payments = queryset_payments.annotate(
-                c_amount=Value(0),
-                p_amount=F('amount'),
-                transaction_type=Value('Payment')
-            )
+            # Previous balance row
+            transactions.append({
+                'date': datetime.strptime(start_date, "%Y-%m-%d").date(),
+                'transaction_type': 'Balance',
+                'description': 'Previous Balance',
+                'c_amount': prev_charges,
+                'p_amount': prev_payments + prev_benefits,
+                'balance': prev_balance
+            })
 
-            transactions = sorted(
-                list(charges) + list(payments),
-                key=lambda t: t.date
-            )
+            # Current charges
+            charges = Scharges.objects.filter(stud_id=selected_student.ref, date__range=[start_date, end_date])
+            for c in charges:
+                transactions.append({
+                    'date': c.date,
+                    'transaction_type': 'Charge',
+                    'description': c.description,
+                    'c_amount': float(c.amount),
+                    'p_amount': 0,
+                })
 
-            # Calculate running balance
+            # Current payments
+            payments = Spayment.objects.filter(stud_id=selected_student.ref, date__range=[start_date, end_date])
+            for p in payments:
+                transactions.append({
+                    'date': p.date,
+                    'transaction_type': 'Payment',
+                    'description': p.description,
+                    'c_amount': 0,
+                    'p_amount': float(p.amount),
+                })
+
+            # Current benefits
+            benefits = Benefits.objects.filter(stud_id=selected_student.ref, date__range=[start_date, end_date])
+            for b in benefits:
+                transactions.append({
+                    'date': b.date,
+                    'transaction_type': 'Benefit',
+                    'description': b.description,
+                    'c_amount': 0,
+                    'p_amount': float(b.amount),
+                })
+
+            # Sort and calculate balance
+            transactions.sort(key=lambda t: t['date'])
             balance = 0
-            for transaction in transactions:
-                balance += transaction.c_amount - transaction.p_amount
-                transaction.balance = balance
+            for t in transactions:
+                balance += t['c_amount'] - t['p_amount']
+                t['balance'] = balance
 
-            # Set the final net balance
-            net_balance = balance
+            net_balance = float(balance) if balance is not None else 0.0
+
+            # Format the net_balance as currency
+            net_balance = "{:,.2f}".format(net_balance)
 
     except Exception as e:
-        print(f"An unexpected error occurred: {str(e)}")
-        
-    # Return the data to the template
+        print(f"Error: {e}")
+
+    print(students)
     return render(request, 'course/student_soa.html', {
         'students': students,
         'selected_student': selected_student,
@@ -762,3 +803,99 @@ def send_tcp_message_to_vb_server(phone_number, message,  port=5566):
     except Exception as e:
         print("TCP Error:", e)
         
+        
+
+
+from django.db import DatabaseError
+
+@login_required
+def view_grade(request, course_id):
+    course = get_object_or_404(Course, ref=course_id)
+
+    # Get distinct grading periods for the course
+    grading_periods = Grade.objects.filter(subject_code=course).values_list('grading_period', flat=True).distinct()
+
+    # Get students enrolled in this course
+    enrolled_ids = Studentenrollsubject.objects.filter(subject=course_id).values_list('sr_id', flat=True)
+    students_register = Studentregister.objects.filter(sr_id__in=enrolled_ids)
+    enrolled_students = Student.objects.filter(ref__in=students_register.values_list('stud_id', flat=True))
+
+    # Build student_grades dictionary
+    student_grades = {}
+    for student in enrolled_students:
+        student_grades[student.ref] = {}
+        for period in grading_periods:
+            grade = Grade.objects.filter(stud=student, subject_code=course, grading_period=period).first()
+            student_grades[student.ref][period] = grade.stud_grade if grade else 'No grade'
+
+    # Handle POST submission
+    if request.method == "POST":
+        for student in enrolled_students:
+            for period in grading_periods:
+                field_name = f'grade_{student.ref}_{period}'
+                grade_value = request.POST.get(field_name)
+
+                if grade_value:
+                    try:
+                        grade_value = float(grade_value)  # Validate input
+                        grade = Grade.objects.filter(
+                            stud=student,
+                            subject_code=course,
+                            grading_period=period
+                        ).first()
+                        print(grade)
+                        if grade:
+                            print("www",grade)
+                            # Update existing grade
+                            grade.stud_grade = grade_value
+                            grading_period=period  # or dynamic
+                            grade.gradelevel = 5  # or dynamic                            
+                            grade.save()
+                        else:
+                            print("w22ww",grade)
+                            # Insert new grade
+                            Grade.objects.create(
+                                stud=student,
+                                subject_code=course,
+                                grading_period=period,
+                                stud_grade=grade_value,
+                                academic_year='SY. 2025-2026',
+                                gradelevel=5
+                            )
+
+                    except ValueError:
+                        messages.error(request, f"Invalid input for grade of {student} in {period}.")
+                    except IntegrityError:
+                        messages.error(request, f"Database error when saving grade for {student} in {period}.")
+
+        messages.success(request, "Grades saved successfully!")
+
+        # REFRESH updated grades after POST
+    student_grades = {}
+    for student in enrolled_students:
+        student_grades[student.ref] = {}
+        for period in grading_periods:
+            grade = Grade.objects.filter(stud=student, subject_code=course, grading_period=period).first()
+            student_grades[student.ref][period] = grade.stud_grade if grade else 'No grade'
+
+    
+    
+    return render(request, 'course/view_grade.html', {
+        'course': course,
+        'grading_periods': grading_periods,
+        'students': enrolled_students,
+        'student_grades': student_grades,
+    })
+    
+    
+@login_required
+def delete_grade(request, student_id, course_id, period):
+    try:
+        grade = Grade.objects.get(stud_id=student_id, subject_code_id=course_id, grading_period=period)
+        print(grade)
+        grade.delete()
+        messages.success(request, "Grade deleted successfully.")
+    except Grade.DoesNotExist:
+        messages.error(request, "Grade not found.")
+
+    return redirect('view_grade', course_id=course_id)

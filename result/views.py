@@ -6,7 +6,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.files.storage import FileSystemStorage
 from django.http import HttpResponse
-
+from collections import defaultdict
 from reportlab.platypus import (
     SimpleDocTemplate,
     Paragraph,
@@ -23,10 +23,25 @@ from reportlab.lib.units import inch
 from reportlab.lib import colors
 
 from core.models import Session, Semester
-from course.models import Course
+# from course.models import Course
 from accounts.models import Student
-from accounts.decorators import lecturer_required, student_required
+from accounts.decorators import lecturer_required, student_required, parent_required
 from .models import TakenCourse, Result
+
+from course.importmodels import (
+    Subject as Course,
+    Gradelevels,
+    Studentregister,
+    Studentenrollsubject,
+    Teacher,
+    Attendance,
+    Student,
+    Parent,
+    Parentstudent,
+    Scharges,
+    Spayment,
+    Grade
+)
 
 
 CM = 2.54
@@ -55,8 +70,8 @@ def add_score(request):
     # allocated_course__lecturer__pk=request.user.id,
     # semester=current_semester)
     courses = Course.objects.filter(
-        allocated_course__lecturer__pk=request.user.id
-    ).filter(semester=current_semester)
+        teacher_id=request.user.lecturer.teacherid
+    )
     context = {
         "current_session": current_session,
         "current_semester": current_semester,
@@ -78,8 +93,8 @@ def add_score_for(request, id):
     )
     if request.method == "GET":
         courses = Course.objects.filter(
-            allocated_course__lecturer__pk=request.user.id
-        ).filter(semester=current_semester)
+            teacher_id=request.user.lecturer.teacherid
+        )
         course = Course.objects.get(pk=id)
         # myclass = Class.objects.get(lecturer__pk=request.user.id)
         # myclass = get_object_or_404(Class, lecturer__pk=request.user.id)
@@ -89,13 +104,22 @@ def add_score_for(request, id):
         #  course__id=id).filter(
         #  student__allocated_student__lecturer__pk=request.user.id).filter(
         #  course__semester=current_semester)
-        students = (
-            TakenCourse.objects.filter(
-                course__allocated_course__lecturer__pk=request.user.id
-            )
-            .filter(course__id=id)
-            .filter(course__semester=current_semester)
-        )
+        
+        
+        # students = (
+        #     TakenCourse.objects.filter(
+        #         course__allocated_course__lecturer__pk=request.user.id
+        #     )
+        #     .filter(course__id=id)
+        #     .filter(course__semester=current_semester)
+        # )
+        
+        
+        enrolled_ids = Studentenrollsubject.objects.filter(subject_code=id).values_list('sr_id', flat=True)
+        students_register = Studentregister.objects.filter(sr_id__in=enrolled_ids)
+        students = Student.objects.filter(ref__in=students_register.values_list('stud_id', flat=True))
+        
+        
         context = {
             "title": "Submit Score",
             "courses": courses,
@@ -109,29 +133,58 @@ def add_score_for(request, id):
 
     if request.method == "POST":
         ids = ()
-        data = request.POST.copy()
+        data = request.POST.copy()        
         data.pop("csrfmiddlewaretoken", None)  # remove csrf_token
+        
         for key in data.keys():
+            
             ids = ids + (
                 str(key),
             )  # gather all the all students id (i.e the keys) in a tuple
+        print(ids)    
         for s in range(
             0, len(ids)
         ):  # iterate over the list of student ids gathered above
-            student = TakenCourse.objects.get(id=ids[s])
+            
+            # student = TakenCourse.objects.get(id=ids[s])
+            try:
+                student = TakenCourse.objects.get(id=ids[s])
+            except TakenCourse.DoesNotExist:
+                print(f"TakenCourse with ID {ids[s]} does not exist. Skipping.")
+                continue
+            
+            
             # print(student)
             # print(student.student)
             # print(student.student.program.id)
-            courses = (
-                Course.objects.filter(level=student.student.level)
-                .filter(program__pk=student.student.program.id)
-                .filter(semester=current_semester)
-            )  # all courses of a specific level in current semester
+            
+            # courses = (
+            #     Course.objects.filter(level=student.student.level)
+            #     .filter(program__pk=student.student.program.id)
+            #     .filter(semester=current_semester)
+            # )  # all courses of a specific level in current semester
+            
+            # Step 1: Get all subject_code and sr_id combinations from Studentenrollsubject
+            enrollments = Studentenrollsubject.objects.all()
+
+            # Step 2: Get subject refs from enrollments
+            subject_codes = enrollments.values_list('subject_code', flat=True)
+            sr_ids = enrollments.values_list('sr_id', flat=True)
+
+            # Step 3: Fetch related studentregister records
+            student_registers = Studentregister.objects.filter(sr_id__in=sr_ids)
+
+            # Step 4: Fetch related subject records
+            courses = Course.objects.filter(ref__in=subject_codes)
+
+            
+            
+            
             total_credit_in_semester = 0
             for i in courses:
                 if i == courses.count():
                     break
-                total_credit_in_semester += int(i.credit)
+                total_credit_in_semester += int(1) ###############
             score = data.getlist(
                 ids[s]
             )  # get list of score for current student in the loop
@@ -159,6 +212,8 @@ def add_score_for(request, id):
             obj.comment = obj.get_comment()
             # obj.carry_over(obj.grade)
             # obj.is_repeating()
+            
+            print("aaaaaaaaaaaaaaaaaaaaaaaa")
             obj.save()
             gpa = obj.calculate_gpa()
             cgpa = obj.calculate_cgpa()
@@ -168,7 +223,7 @@ def add_score_for(request, id):
                     student=student.student,
                     semester=current_semester,
                     session=current_session,
-                    level=student.student.level,
+                    level=1,############
                 )
                 a.gpa = gpa
                 a.cgpa = cgpa
@@ -179,7 +234,7 @@ def add_score_for(request, id):
                     gpa=gpa,
                     semester=current_semester,
                     session=current_session,
-                    level=student.student.level,
+                     level=1,############
                 )
 
             # try:
@@ -199,35 +254,71 @@ def add_score_for(request, id):
 
 # ########################################################
 
-
 @login_required
-@student_required
 def grade_result(request):
-    student = Student.objects.get(student__pk=request.user.id)
-    courses = TakenCourse.objects.filter(student__student__pk=request.user.id).filter(
-        course__level=student.level
+    user_email = request.user.email
+    student_ref = request.GET.get('student_ref')
+    selected_student = None
+    students = []
+    print(student_ref)
+    if request.user.is_student:
+        student_ref = request.user.student.stud_id
+        # students = Student.objects.get(ref=studeyynt_ref)#[request.user.student]
+        students = [Student.objects.get(ref=student_ref)]
+
+    else:
+        parents = Parent.objects.filter(email_address=user_email)
+        if not parents.exists():
+            return render(request, 'school/error.html', {'message': 'Parent not found.'})
+        parent = parents.first()
+
+        parent_students = Parentstudent.objects.filter(gid=parent.pid)
+        students = Student.objects.filter(ref__in=[ps.stud_id for ps in parent_students])
+
+    if student_ref:
+        try:
+            selected_student = Student.objects.get(ref=student_ref)
+        except Student.DoesNotExist:
+            selected_student = students.first()
+    else:
+        selected_student = students.first()
+    
+        
+        
+    # Fetching courses and grades for the selected student
+    courses = Studentenrollsubject.objects.filter(sr__stud_id=selected_student.ref).select_related('sr', 'subject')
+    
+    grades = Grade.objects.filter(
+        stud=selected_student.ref,
+        subject_code__in=[c.subject for c in courses]
     )
-    # total_credit_in_semester = 0
-    results = Result.objects.filter(student__student__pk=request.user.id)
+    print(grades)
+    grading_periods = grades.values_list('grading_period', flat=True).distinct()
+    grade_dict = {}
+    for g in grades:
+        key = (g.subject_code.ref, g.grading_period)
+        grade_dict[key] = g.stud_grade
 
-    result_set = set()
-
+    results = Result.objects.filter(student_id=selected_student.ref)
+    
+    # Group results by academic year
+    academic_years = {}
     for result in results:
-        result_set.add(result.session)
+        academic_year = result.session.split('-')[0]
+        if academic_year not in academic_years:
+            academic_years[academic_year] = []
+        academic_years[academic_year].append(result)
 
-    sorted_result = sorted(result_set)
-
+    # Sorting the academic years
+    sorted_academic_years = sorted(academic_years.items())
+    
     total_first_semester_credit = 0
     total_sec_semester_credit = 0
     for i in courses:
-        if i.course.semester == "First":
-            total_first_semester_credit += int(i.course.credit)
-        if i.course.semester == "Second":
-            total_sec_semester_credit += int(i.course.credit)
+        total_first_semester_credit += 1
+        total_sec_semester_credit += 1
 
     previousCGPA = 0
-    # previousLEVEL = 0
-    # calculate_cgpa
     for i in results:
         previousLEVEL = i.level
         try:
@@ -240,16 +331,19 @@ def grade_result(request):
             break
         except:
             previousCGPA = 0
-
+            
+    print(students)
     context = {
         "courses": courses,
+        'grade_dict': grade_dict,
+        'grading_periods': grading_periods,
         "results": results,
-        "sorted_result": sorted_result,
-        "student": student,
+        "academic_years": sorted_academic_years,  # Pass the academic years to the template
+        "student": selected_student,
+        "students": students,  # Pass students to the template for dropdown
         "total_first_semester_credit": total_first_semester_credit,
         "total_sec_semester_credit": total_sec_semester_credit,
-        "total_first_and_second_semester_credit": total_first_semester_credit
-        + total_sec_semester_credit,
+        "total_first_and_second_semester_credit": total_first_semester_credit + total_sec_semester_credit,
         "previousCGPA": previousCGPA,
     }
 
@@ -259,11 +353,11 @@ def grade_result(request):
 @login_required
 @student_required
 def assessment_result(request):
-    student = Student.objects.get(student__pk=request.user.id)
+    student = Student.objects.get(ref=request.user.student.stud_id)
     courses = TakenCourse.objects.filter(
-        student__student__pk=request.user.id, course__level=student.level
+        student_id=request.user.id
     )
-    result = Result.objects.filter(student__student__pk=request.user.id)
+    result = Result.objects.filter(student_id=request.user.student.stud_id)
 
     context = {
         "courses": courses,
@@ -279,8 +373,10 @@ def assessment_result(request):
 def result_sheet_pdf_view(request, id):
     current_semester = Semester.objects.get(is_current_semester=True)
     current_session = Session.objects.get(is_current_session=True)
-    result = TakenCourse.objects.filter(course__pk=id)
-    course = get_object_or_404(Course, id=id)
+    result = TakenCourse.objects.filter(course_id=id)
+    
+    
+    course = get_object_or_404(Course, ref=id)
     no_of_pass = TakenCourse.objects.filter(course__pk=id, comment="PASS").count()
     no_of_fail = TakenCourse.objects.filter(course__pk=id, comment="FAIL").count()
     fname = (
@@ -362,7 +458,7 @@ def result_sheet_pdf_view(request, id):
     normal.fontSize = 10
     normal.leading = 15
     level = result.filter(course_id=id).first()
-    title = "<b>Level: </b>" + str(level.course.level)
+    title = "<b>Level: </b>" + str(course.grade_level)
     title = Paragraph(title.upper(), normal)
     Story.append(title)
     Story.append(Spacer(1, 0.6 * inch))
@@ -390,10 +486,11 @@ def result_sheet_pdf_view(request, id):
         data = [
             (
                 count + 1,
-                student.student.student.username.upper(),
-                Paragraph(
-                    student.student.student.get_full_name.capitalize(), styles["Normal"]
-                ),
+                student.student_id,
+                student.student_id,
+                # Paragraph(
+                #     student.student_id, styles["Normal"]
+                # ),
                 student.total,
                 student.grade,
                 student.point,

@@ -4,9 +4,25 @@ from django.conf import settings
 from django.db import models
 from django.urls import reverse
 
-from accounts.models import Student
+# from accounts.models import Student
+from course.importmodels import (
+    Subject as Course,
+    Gradelevels,
+    Studentregister,
+    Studentenrollsubject,
+    Teacher,
+    Attendance,
+    Student,
+    Parent,
+    Parentstudent,
+    Scharges,
+    Spayment
+)
+
+
+
 from core.models import Semester
-from course.models import Course
+# from course.models import Course
 
 A_PLUS = "A+"
 A = "A"
@@ -106,7 +122,7 @@ class TakenCourse(models.Model):
     )
 
     def get_absolute_url(self):
-        return reverse("course_detail", kwargs={"slug": self.course.slug})
+        return reverse("course_detail", kwargs={"slug": self.course.ref})
 
     def __str__(self):
         return f"{self.course.title} ({self.course.code})"
@@ -152,10 +168,14 @@ class TakenCourse(models.Model):
             return Decimal("0.00")
 
         taken_courses = TakenCourse.objects.filter(
-            student=self.student,
-            course__level=self.student.level,
-            course__semester=current_semester.semester,
+            student=self.student
+            # course__level=self.student.level,
+            # course__semester=current_semester.semester,
         )
+        
+        
+        
+        
 
         total_points = sum(tc.point for tc in taken_courses)
         total_credits = sum(tc.course.credit for tc in taken_courses)

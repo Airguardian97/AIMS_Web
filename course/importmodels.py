@@ -386,8 +386,9 @@ class Feegroup(models.Model):
 
 
 class Grade(models.Model):
-    stud = models.OneToOneField('Student', models.DO_NOTHING, db_column='Stud_ID', primary_key=True)  # Field name made lowercase.
-    subject_code = models.ForeignKey('Subject', models.DO_NOTHING, db_column='subject_Code')  # Field name made lowercase.
+    stud = models.ForeignKey('Student', models.DO_NOTHING, db_column='Stud_ID')
+
+    subject_code = models.ForeignKey('Subject', models.DO_NOTHING, db_column='subject_Code')
     stud_grade = models.CharField(db_column='stud_Grade', max_length=90)  # Field name made lowercase.
     academic_year = models.CharField(db_column='academic_Year', max_length=90)  # Field name made lowercase.
     grading_period = models.CharField(db_column='grading_Period', max_length=90)  # Field name made lowercase.
@@ -396,7 +397,7 @@ class Grade(models.Model):
     class Meta:
         managed = False
         db_table = 'grade'
-        unique_together = (('stud', 'subject_code', 'stud_grade', 'grading_period'),)
+        unique_together = (('stud', 'subject_code', 'grading_period'),)
 
 
 class Gradelevels(models.Model):
@@ -414,6 +415,24 @@ class Gradelevels(models.Model):
     
     def get_absolute_url(self):
         return reverse("program_detail", kwargs={"pk": self.ref})
+    
+
+class Benefits(models.Model):
+    ref = models.AutoField(primary_key=True)
+    stud = models.ForeignKey('Student', on_delete=models.CASCADE, db_column='Stud_ID')
+    type = models.CharField(max_length=90, null=True, blank=True)
+    description = models.CharField(max_length=90, null=True, blank=True)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    date = models.DateField()
+    school_year = models.CharField(max_length=90, null=True, blank=True)
+    jour_code = models.IntegerField(null=True, blank=True)
+    referenceno = models.CharField(max_length=90)
+
+    class Meta:
+        db_table = 'benefits'
+
+    def __str__(self):
+        return f"{self.stud} - {self.description} - {self.amount}"
 
 
 class Guardian(models.Model):
@@ -878,19 +897,27 @@ class Student(models.Model):
     email = models.CharField(max_length=90)
     rfid = models.CharField(max_length=90, blank=True, null=True)
 
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name}" 
+    
+        
     class Meta:
         managed = False
         db_table = 'student'
 
 
 class Studentenrollsubject(models.Model):
-    sr_id = models.CharField(db_column='SR_ID', max_length=90)  # Field name made lowercase.
-    subject_code = models.CharField(db_column='subject_Code', max_length=90)  # Field name made lowercase.
-    ref = models.AutoField(db_column='Ref', primary_key=True)  # Field name made lowercase.
+    sr = models.ForeignKey('Studentregister', db_column='SR_ID', to_field='sr_id', on_delete=models.DO_NOTHING)
+    subject = models.ForeignKey('Subject', db_column='subject_Code', to_field='ref', on_delete=models.DO_NOTHING)
+    ref = models.AutoField(db_column='Ref', primary_key=True)
 
     class Meta:
         managed = False
         db_table = 'studentenrollsubject'
+    
+    def get_absolute_url(self):
+        return reverse("course_detail", kwargs={"ref": self.subject.ref})  
 
 
 class Studentregister(models.Model):
@@ -909,6 +936,7 @@ class Studentregister(models.Model):
     class Meta:
         managed = False
         db_table = 'studentregister'
+    
 
 
 class Subject(models.Model):

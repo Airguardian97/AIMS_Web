@@ -48,11 +48,11 @@
                 <tr>
                     <td>{{ forloop.counter }}.</td> 
                     <td><a href="{{ course.get_absolute_url }}">
-                        {{ course.sub_name }}</a></td>
-                    <td>{{ course.course.code }}</td>
-                    <td>{{ course.course.credit }}</td>
-                    <td>{{ course.course.year }}</td>
-                    <td>{{ course.course.semester }}</td>
+                        {{ course.subject.sub_name }}</a></td>
+                    <td>{{ course.subject.course.code }}</td>
+                    <td>{{ course.subject.course.credit }}</td>
+                    <td>{{ course.subject.course.year }}</td>
+                    <td>{{ course.subject.course.semester }}</td>
                     <th>
                         {% if course.course.is_current_semester == False %}
                         <i class="fas fa-times-circle fa-1-5x danger"></i>
@@ -93,7 +93,13 @@
                 {% for course in courses %}
                 <tr>
                     <td>{{ forloop.counter }}.</td> 
-                    <td><a href="{{ course.get_absolute_url }}">{{ course.sub_name }}</a></td>
+                    <td>
+                        <a href="{{ course.get_absolute_url }}">
+                          <strong>{{ course.sub_name }} </strong><br>
+                          <small class="text-muted">   Section: {{ course.gradelevel_section }}</small>
+                        </a>
+                      </td>
+                      
                     <td>{{ course.subject_code }}</td>
                     <td>{{ course.credit }}</td>
                     <td>{{ course.year }}</td>
@@ -105,12 +111,22 @@
                         <i class="fas fa-times-circle text-danger"></i>
                         {% endif %}
                     </td>
-                    <td>
-                        <a href="{% url 'view_attendance' course.ref %}" >
-                            <i class="fas fa-eye"></i>
-                        </a>
-                        
+                    
+                    <td> 
+                        <div class="dropdown">
+                            <button class="btn btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa fa-ellipsis-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                              <li><a href="{% url 'view_attendance' course.ref %}" ><i class="fas fa-calendar-check"></i> Attendance  </a></li>                          
+                          
+                              <li><a href="{% url 'view_grade' course.ref %}" ><i class="fas fa-calendar-check"></i> Grade  </a></li>
+                               
+                           
+                                       </ul>
+                        </div>
                     </td>
+                    
                 </tr>
                 {% endfor %}
             </tbody>

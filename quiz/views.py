@@ -59,7 +59,7 @@ class QuizCreateView(CreateView):
         course = get_object_or_404(Course, ref=self.kwargs["slug"])
         initial["course"] = course
         return initial
-
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["course"] = get_object_or_404(Course, ref=self.kwargs["slug"])
@@ -163,7 +163,7 @@ class MCQuestionCreate(CreateView):
                 if "another" in self.request.POST:
                     return redirect(
                         "mc_create",
-                        slug=self.kwargs["slug"],
+                        ref=self.kwargs["ref"],
                         quiz_id=self.kwargs["quiz_id"],
                     )
                 return redirect("quiz_index", slug=self.kwargs["ref"])
@@ -178,14 +178,17 @@ class MCQuestionCreate(CreateView):
 
 @method_decorator([login_required], name="dispatch")
 class QuizUserProgressView(TemplateView):
+    
     template_name = "quiz/progress.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         progress, _ = Progress.objects.get_or_create(user=self.request.user)
+        
         context["cat_scores"] = progress.list_all_cat_scores
         context["exams"] = progress.show_exams()
         context["exams_counter"] = context["exams"].count()
+        print("asdadaad",progress.list_all_cat_scores)
         return context
 
 
@@ -197,9 +200,23 @@ class QuizMarkingList(ListView):
     def get_queryset(self):
         queryset = Sitting.objects.filter(complete=True)
         if not self.request.user.is_superuser:
+#             queryset = queryset.filter(
+#     quiz__course_id__teacher_id=str(self.request.user.lecturer.teacherid)
+# )
+            subject_refs = Course.objects.filter(
+                    teacher_id=self.request.user.lecturer.teacherid
+                ).values_list('ref', flat=True)
+
+# Convert to strings if needed
+            subject_refs = [str(ref) for ref in subject_refs]
+            print("QUIZZZZZZZZZZZ",subject_refs)
             queryset = queryset.filter(
-                quiz__course__allocated_course__lecturer__pk=self.request.user.id
+                quiz__course_id__in=subject_refs
             )
+            
+            
+            
+            print("QUIZZZZZZZZZZZ",queryset)
         quiz_filter = self.request.GET.get("quiz_filter")
         if quiz_filter:
             queryset = queryset.filter(quiz__title__icontains=quiz_filter)
@@ -244,7 +261,7 @@ class QuizTake(FormView):
 
     def dispatch(self, request, *args, **kwargs):
         self.quiz = get_object_or_404(Quiz, slug=self.kwargs["slug"])
-        self.course = get_object_or_404(Subject, pk=self.kwargs["pk"])
+        self.course = get_object_or_404(Course, ref=self.kwargs["pk"])
         if not Question.objects.filter(quiz=self.quiz).exists():
             messages.warning(request, "This quiz has no questions available.")
             return redirect("quiz_index", slug=self.course.ref)

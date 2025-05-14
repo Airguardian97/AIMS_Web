@@ -30,7 +30,7 @@
                     </button>
                     <div class="dropdown-menu">
                         {% for course in courses %}
-                            <a class="dropdown-item" href="{% url 'add_score_for' course.id %}" title="{{ course.code }}">{{ course.title }}</a>
+                            <a class="dropdown-item" href="{% url 'add_score_for' course.ref %}" title="{{ course.subject_code }}">{{ course.sub_name }}</a>
                         {% empty %}
                             <p class="dropdown-item">{% trans 'No course.' %}</p>
                         {% endfor %}

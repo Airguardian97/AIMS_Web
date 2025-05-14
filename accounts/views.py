@@ -11,19 +11,27 @@ from django_filters.views import FilterView
 from xhtml2pdf import pisa
 
 from accounts.decorators import admin_required
-from accounts.filters import LecturerFilter, StudentFilter
+from accounts.filters import LecturerFilter, StudentFilter, ParentFilter
 from accounts.forms import (
     ParentAddForm,
     ProfileUpdateForm,
     ProgramUpdateForm,
     StaffAddForm,
     StudentAddForm,  
-    LecturerOnlyForm  
+    LecturerOnlyForm
+    
 )
 from accounts.models import Parent, Student, User, Lecturer
 from core.models import Semester, Session
-from course.models import Course
+# from course.models import Course
 from result.models import TakenCourse
+
+from course.importmodels import (
+    Subject as Course
+  
+)
+
+
 
 # ########################################################
 # Utility Functions
@@ -88,8 +96,9 @@ def profile(request):
 
     if request.user.is_lecturer:
         courses = Course.objects.filter(
-            allocated_course__lecturer__pk=request.user.id, semester=current_semester
+            teacher_id=request.user.lecturer.teacherid
         )
+        print(courses)
         context["courses"] = courses
         return render(request, "accounts/profile.html", context)
 
@@ -97,7 +106,7 @@ def profile(request):
         student = get_object_or_404(Student, student__pk=request.user.id)
         parent = Parent.objects.filter(student=student).first()
         courses = TakenCourse.objects.filter(
-            student__student__id=request.user.id, course__level=student.level
+            student_id=request.user.student.stud_id
         )
         context.update(
             {
@@ -422,3 +431,61 @@ class ParentAdd(CreateView):
     def form_valid(self, form):
         messages.success(self.request, "Parent added successfully.")
         return super().form_valid(form)
+
+@method_decorator([login_required, admin_required], name="dispatch")
+class ParentListView(FilterView):
+    queryset = User.objects.filter(is_parent=True)
+    filterset_class = ParentFilter    
+    template_name = "accounts/parent_list.html"
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "Parents"
+        return context
+    
+    
+# @method_decorator([login_required, admin_required], name="dispatch")
+# class LecturerFilterView(FilterView):
+#     filterset_class = LecturerFilter
+#     queryset = User.objects.filter(is_lecturer=True)
+#     template_name = "accounts/lecturer_list.html"
+#     paginate_by = 10
+
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         context["title"] = "Lecturers"
+#         return context    
+    
+    
+
+
+@login_required
+@admin_required
+def edit_parent(request, pk):
+    parent_user = get_object_or_404(User, is_parent=True, pk=pk)
+    if request.method == "POST":
+        form = ProfileUpdateForm(request.POST, request.FILES, instance=parent_user)
+        
+        if form.is_valid():
+            form.save()
+            full_name = parent_user.get_full_name
+            messages.success(request, f"parent {full_name} has been updated.")
+            return redirect("parents_list")
+        messages.error(request, "Please correct the error below.")
+    else:
+        form = ProfileUpdateForm(instance=parent_user)
+    return render(
+        request, "accounts/edit_parent.html", {"title": "Edit parent", "form": form}
+    )
+    
+    
+
+@login_required
+@admin_required
+def delete_parent(request, pk):
+    parent = get_object_or_404(parent, pk=pk)
+    full_name = parent.parent.get_full_name
+    parent.delete()
+    messages.success(request, f"parent {full_name} has been deleted.")
+    return redirect("parent_list")

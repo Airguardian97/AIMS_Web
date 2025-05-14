@@ -63,3 +63,6 @@ class CourseAllocationFilter(django_filters.FilterSet):
 
     def filter_by_course(self, queryset, name, value):
         return queryset.filter(courses__title__icontains=value)
+
+
+

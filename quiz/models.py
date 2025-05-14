@@ -165,7 +165,35 @@ class Progress(models.Model):
         verbose_name_plural = _("User progress records")
 
     def list_all_cat_scores(self):
-        return {}  # Implement as needed
+        if not self.score:
+            return {}
+
+        parts = self.score.strip().split(",")
+        data = [parts[i:i+3] for i in range(0, len(parts)-1, 3)]  # [quiz, score, possible]
+        result = {}
+
+        for item in data:
+            if len(item) != 3:
+                continue
+            quiz_str, score_str, possible_str = item
+            try:
+                score = int(score_str)
+                possible = int(possible_str)
+                incorrect = possible - score
+                percent = f"{(score / possible * 100):.0f}%"
+
+                # Simplify quiz string to category name
+                if "." in quiz_str:
+                    quiz_name = quiz_str.split(".")[-2].capitalize()
+                else:
+                    quiz_name = quiz_str
+
+                result[quiz_name] = (score, incorrect, percent)
+            except (ValueError, ZeroDivisionError):
+                continue
+
+        return result
+
 
     def update_score(self, question, score_to_add=0, possible_to_add=0):
         if not isinstance(score_to_add, int) or not isinstance(possible_to_add, int):
@@ -228,6 +256,7 @@ class SittingManager(models.Manager):
         return new_sitting
 
     def user_sitting(self, user, quiz, course):
+        print("asdasdsasasdasd")
         if (
             quiz.single_attempt
             and self.filter(user=user, quiz=quiz, course=course, complete=True).exists()

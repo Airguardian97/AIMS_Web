@@ -1,6 +1,6 @@
 from django.db.models import Q
 import django_filters
-from .models import User, Student
+from .models import User, Student, Parent
 
 
 class LecturerFilter(django_filters.FilterSet):
@@ -76,4 +76,52 @@ class StudentFilter(django_filters.FilterSet):
         return queryset.filter(
             Q(student__first_name__icontains=value)
             | Q(student__last_name__icontains=value)
+        )
+
+
+
+class ParentFilter(django_filters.FilterSet):
+    id_no = django_filters.CharFilter(
+        field_name="parent__username", lookup_expr="exact", label=""
+    )
+    name = django_filters.CharFilter(
+        field_name="parent__name", method="filter_by_name", label=""
+    )
+    email = django_filters.CharFilter(
+        field_name="parent__email", lookup_expr="icontains", label=""
+    )
+    program = django_filters.CharFilter(
+        field_name="program__title", lookup_expr="icontains", label=""
+    )
+
+    class Meta:
+        model = Parent
+        fields = [
+            "id_no",
+            "name",
+            "email",
+            "program",
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Change html classes and placeholders
+        self.filters["id_no"].field.widget.attrs.update(
+            {"class": "au-input", "placeholder": "ID No."}
+        )
+        self.filters["name"].field.widget.attrs.update(
+            {"class": "au-input", "placeholder": "Name"}
+        )
+        self.filters["email"].field.widget.attrs.update(
+            {"class": "au-input", "placeholder": "Email"}
+        )
+        self.filters["program"].field.widget.attrs.update(
+            {"class": "au-input", "placeholder": "Program"}
+        )
+
+    def filter_by_name(self, queryset, name, value):
+        return queryset.filter(
+            Q(parent__first_name__icontains=value)
+            | Q(parent__last_name__icontains=value)
         )

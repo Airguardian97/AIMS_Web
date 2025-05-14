@@ -20,10 +20,29 @@
     </ol>
 </nav>
 
-{% if request.user.is_superuser or request.user.is_lecturer %}
-<div class="manage-wrap">
-    <a class="btn btn-primary" href="{% url 'quiz_create' course.ref %}"><i class="fas fa-plus"></i>{% trans 'Add Quiz' %}</a>
-</div>
+{% if  request.user.is_lecturer %}
+    {% if request.user.lecturer.teacherid == course.teacher_id %}
+        <div class="manage-wrap">
+            <a class="btn btn-primary" href="{% url 'quiz_create' course.ref %}">
+                <i class="fas fa-plus"></i> {% trans 'Add Quiz' %}
+            </a>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            You are not allowed to add a quiz for this course.
+        </div>
+    {% endif %}
+{% endif %}
+
+
+
+{% if request.user.is_superuser %}
+            <div class="manage-wrap">
+            <a class="btn btn-primary" href="{% url 'quiz_create' course.ref %}">
+                <i class="fas fa-plus"></i> {% trans 'Add Quiz' %}
+            </a>
+        </div>
+   
 {% endif %}
 
 <div class="title-1">{% trans 'Quizzes' %} [{{ course.sub_name }}]</div>

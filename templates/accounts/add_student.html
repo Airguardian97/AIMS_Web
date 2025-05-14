@@ -3,7 +3,8 @@
 {% block title %}{{ title }} | {% trans 'Learning management system' %}{% endblock title %}
 {% load crispy_forms_tags %}
 {% load static %}
-
+<link href="{% static 'django_select2/css/select2.css' %}" rel="stylesheet" />
+<script src="{% static 'django_select2/js/select2.js' %}"></script>
 
 {% block content %}
 
@@ -49,5 +50,9 @@
 
     <input class="btn btn-primary" type="submit" value="{% trans 'Save' %}">
 </form>
-
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('select').select2();  // Initialize select2 on all select elements
+    });
+</script>
 {% endblock content %}
