@@ -14,6 +14,12 @@ from django.db.models import OuterRef, Subquery
 from datetime import datetime
 from django.db import IntegrityError
 from accounts.decorators import lecturer_required, student_required, parent_required
+from datetime import date
+from django.http import HttpResponse
+from django.template.loader import get_template
+from xhtml2pdf import pisa
+
+
 # from accounts.models import Student
 from core.models import Semester
 from course.filters import CourseAllocationFilter, ProgramFilter, GradelevelsFilter
@@ -129,7 +135,7 @@ def view_attendance(request, course_id):
     course = get_object_or_404(Course, ref=course_id)    
     
     
-    # print(course_id)
+    print(course_id)
     # # Example: Fetch related attendance records here
     # attendance_records = Attendance.objects.filter(cl=course_id)
     # print(attendance_records)
@@ -154,9 +160,9 @@ def save_attendance(request, course_id):
             return redirect('program_detail', pk=course_id)
         
         course = get_object_or_404(Course, ref=course_id)
-
+        print(course_id)
         # Fetch enrolled students
-        enrolled_ids = Studentenrollsubject.objects.filter(subject_code=course_id).values_list('sr_id', flat=True)
+        enrolled_ids = Studentenrollsubject.objects.filter(subject_id=course_id).values_list('sr_id', flat=True)
         students_register = Studentregister.objects.filter(sr_id__in=enrolled_ids)
         students = Student.objects.filter(ref__in=students_register.values_list('stud_id', flat=True))
 
@@ -176,6 +182,64 @@ def save_attendance(request, course_id):
         return redirect('view_attendance' , course_id=course_id)
 
     return redirect('view_attendance', course_id=course_id)
+
+@login_required
+def attendance_pdf(request, course_id):
+    date_str = request.GET.get("date")
+    try:
+        date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
+    except Exception:
+        return HttpResponse("Invalid date format", status=400)
+
+    # Get attendance records
+    attendance_records = Attendance.objects.filter(subject_code=course_id, date=date_obj)
+
+    # Collect student IDs from Attendance
+    student_ids = [record.stud for record in attendance_records if record.stud]
+
+    # Get Student records matching those IDs
+    students = Student.objects.filter(ref__in=student_ids)
+
+    # Map: studentid -> Student object
+    student_map = {s.ref: s for s in students}
+
+    seen = set()
+    data = []
+
+    for record in attendance_records:
+        try:
+            student_ref = int(record.stud) if record.stud else None
+        except ValueError:
+            continue
+
+        if student_ref in seen:
+            continue  # Skip if already processed
+
+        student = student_map.get(student_ref)
+        if student:
+            data.append({
+                'student': student,
+                'attendance': record,
+            })
+            seen.add(student_ref)
+
+
+    # print(student_map)
+    # Render to PDF
+    template = get_template("course/attendance_pdf.html")  # replace with your actual template
+    html = template.render({"data": data, "date": date_obj})
+
+    from xhtml2pdf import pisa
+    response = HttpResponse(content_type='application/pdf')
+    pisa_status = pisa.CreatePDF(html, dest=response)
+    if pisa_status.err:
+        return HttpResponse("Error rendering PDF", status=500)
+    return response
+
+
+
+
+
 
 
 

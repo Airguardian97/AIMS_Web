@@ -22,6 +22,8 @@ urlpatterns = [
         
     path('student-soa/', views.student_soa, name='student-soa'),
     
+    path('attendance/pdf/<str:course_id>/', views.attendance_pdf, name='attendance_pdf'),
+
     
     
      path('attendance/<int:course_id>/', views.view_attendance, name='view_attendance'),  # <- new line

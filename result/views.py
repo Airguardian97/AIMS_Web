@@ -260,12 +260,14 @@ def grade_result(request):
     student_ref = request.GET.get('student_ref')
     selected_student = None
     students = []
-    print(student_ref)
+    
     if request.user.is_student:
         student_ref = request.user.student.stud_id
         # students = Student.objects.get(ref=studeyynt_ref)#[request.user.student]
         students = [Student.objects.get(ref=student_ref)]
-
+        if not student_ref:
+            student_ref = student.stud_id
+            
     else:
         parents = Parent.objects.filter(email_address=user_email)
         if not parents.exists():
@@ -283,7 +285,7 @@ def grade_result(request):
     else:
         selected_student = students.first()
     
-        
+    print("asdasdd",selected_student)    
         
     # Fetching courses and grades for the selected student
     courses = Studentenrollsubject.objects.filter(sr__stud_id=selected_student.ref).select_related('sr', 'subject')
@@ -300,7 +302,7 @@ def grade_result(request):
         grade_dict[key] = g.stud_grade
 
     results = Result.objects.filter(student_id=selected_student.ref)
-    
+    print(grade_dict)
     # Group results by academic year
     academic_years = {}
     for result in results:
@@ -339,7 +341,7 @@ def grade_result(request):
         'grading_periods': grading_periods,
         "results": results,
         "academic_years": sorted_academic_years,  # Pass the academic years to the template
-        "student": selected_student,
+        "selected_student": selected_student,
         "students": students,  # Pass students to the template for dropdown
         "total_first_semester_credit": total_first_semester_credit,
         "total_sec_semester_credit": total_sec_semester_credit,

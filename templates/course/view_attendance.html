@@ -1,45 +1,74 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container">
-    <h2>{{ course.sub_name }} - Mark Attendance</h2>
+<div class="container my-5">
+    <h2 class="mb-4 text-primary">{{ course.sub_name }} - Mark Attendance</h2>
 
-    <form method="post" action="{% url 'save_attendance' course.pk %}">
-        {% csrf_token %}
+    <!-- Attendance Form -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="post" action="{% url 'save_attendance' course.pk %}">
+                {% csrf_token %}
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="attendance_date" class="form-label">Select Date</label>
+                        <input type="date" id="attendance_date" name="attendance_date" class="form-control" required>
+                    </div>
+                </div>
 
-        <!-- Date input first -->
-        <div class="form-group">
-            <label for="attendance_date">Date:</label>
-            <input type="date" id="attendance_date" name="attendance_date" class="form-control" required>
+                <div class="table-responsive mt-3">
+                    <table class="table table-striped table-bordered align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Roll Number</th>
+                                <th>Full Name</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                                <tr>
+                                    <td>{{ student.ref }}</td>
+                                    <td>{{ student.first_name }} {{ student.last_name }}</td>
+                                    <td>
+                                        <select name="status_{{ student.ref }}" class="form-select">
+                                            <option value="Present">Present</option>
+                                            <option value="Absent">Absent</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-end mt-3">
+                    <button type="submit" class="btn btn-success me-2">Save Attendance</button>
+                </div>
+            </form>
         </div>
+    </div>
 
-        <table class="table table-bordered mt-4">
-            <thead>
-                <tr>
-                    <th>Roll Number</th>
-                    <th>Full Name</th>
-                    <th>Status (Present/Absent)</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for student in students %}
-                    <tr>
-                        <td>{{ student.ref }}</td>
-                        <td>{{ student.first_name }}</td>
-                        <td>
-                            <select name="status_{{ student.ref }}" class="form-control">
-                                <option value="Present">Present</option>
-                                <option value="Absent">Absent</option>
-                            </select>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <!-- PDF Form -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form action="{% url 'attendance_pdf' course.pk %}" method="get" target="_blank" class="row g-2 align-items-end">
+                <div class="col-auto">
+                    <label for="pdf_date" class="form-label mb-0">Select Date for PDF:</label>
+                </div>
+                <div class="col-auto">
+                    <input type="date" name="date" id="pdf_date" class="form-control" required>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-info">View Attendance PDF</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-        <button type="submit" class="btn btn-primary">Save Attendance</button>
-    </form>
-
-    <a href="{% url 'user_course_list' %}" class="btn btn-secondary mt-3">Back to Program</a>
+    <!-- Back Button -->
+    <div class="text-end">
+        <a href="{% url 'user_course_list' %}" class="btn btn-secondary">Back to Program</a>
+    </div>
 </div>
 {% endblock %}

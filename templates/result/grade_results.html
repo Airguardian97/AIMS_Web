@@ -1,105 +1,89 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
+{% load static %}
 {% load i18n %}
-
-{% block title %}
-    {{ title }} | {% trans 'Learning management system' %}
-{% endblock title %}
-
 {% block content %}
-{% comment %} <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
-  <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="/">{% trans 'Home' %}</a></li>
-      <li class="breadcrumb-item active" aria-current="page">{% trans 'Grade Results' %}</li>
-  </ol>
-</nav>
+<div class="container mt-4">
+  <h2>Student Statement of Account</h2>
 
-{% include 'snippets/messages.html' %}
-  
-
-<div class="title-1"><i class="fas fa-table"></i> {% trans 'Grade Results' %}</div>
-<p>{{ student.level }} {% trans 'Result' %}</p> {% endcomment %}
-
-{% if students|length > 1 %}
-<form method="get" class="mb-3">
-  <label for="student">Select Student:</label>
-  <select name="student_ref" onchange="this.form.submit()" class="form-select w-auto d-inline-block ms-2">
-    {% for student in students %}
-      <option value="{{ student.ref }}" {% if selected_student and student.ref == selected_student.ref %}selected{% endif %}>
-        {{ student.last_name }}, {{ student.first_name }}
-      </option>
-    {% endfor %}
-  </select>
-</form>
-{% endif %}
+  {% if students|length > 1 %}
+    <form method="get" class="mb-3">
+      <label for="student">Select Student:</label>
+      <select name="student_ref" onchange="this.form.submit()" class="form-select w-auto d-inline-block ms-2">
+        {% for student in students %}
+          <option value="{{ student.ref }}" {% if selected_student and student.ref == selected_student.ref %}selected{% endif %}>
+            {{ student.last_name }}, {{ student.first_name }}
+          </option>
+        {% endfor %}
+      </select>
+    </form>
+  {% endif %}
 
 
-
-    <div class="table-responsive">
-        <div class="table-title"><u>{% trans 'Academic Year:' %} {{ academic_year }}</u></div>
-
-
-
-        
-        <table class="table table-light">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>{% trans 'Course Title' %}</th>
-                    <th>{% trans 'Course Code' %}</th>
-                    
-                    {% for period in grading_periods %}
-                        <th>{{ period|title }}</th>
-                    {% endfor %}
-                    <th>{% trans 'Points' %}</th>
-                    <th>{% trans 'Comment' %}</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for result in results %}
-                    {% for course in courses %}
-                        <tr class="{% if forloop.counter|divisibleby:2 %}bg-gray{% endif %}">
-                            <th>{{ forloop.counter }}</th>
-                            <td><a href="{{ course.get_absolute_url }}">{{ course.subject.sub_name }}</a></td>
-                            <td>{{ course.subject.subject_code }}</td>
-                                        
-                            {% for period in grading_periods %}
-                            <td>
-                                {% with key=course.subject.ref|stringformat:"s"|add:","|add:period %}
-                                    {{ grade_dict|get_grade:key|default:"-" }}
-                                {% endwith %}
-                            </td>
-                             {% endfor %}
-                        
-
-                                    
-                            
-                            <td>{{ course.point }}</td>
-                            <td>
-                                {% if course.comment == 'PASS' %}
-                                    <i class="fas fa-check-circle"></i> {% trans 'PASS' %}
-                                {% elif course.comment == 'FAIL' %}
-                                    <i class="fas fa-exclamation-circle"></i> {% trans 'FAIL' %}
-                                {% else %}
-                                    <span>{{ course.comment }}</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-
-                        {% comment %} <tr>
-                            <td colspan="7">
-                                <strong>{% trans 'Recorded Grade:' %}</strong>
-                                {{ grade_dict|get_item:course.subject.subject_code|default:"N/A" }}
-                            </td>
-                        </tr> {% endcomment %}
-                    {% endfor %}
-                    <tr>
-                        <td colspan="6" class="text-end"><strong>{% trans 'GPA:' %}</strong></td>
-                        <td><strong>{{ result.gpa }}</strong></td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+  {% if selected_student %}
+    <div class="card p-3 mb-4">
+      <h5>Student Info</h5>
+      <p><strong>Name:</strong> {{ selected_student.first_name }} {{ selected_student.last_name }}</p>
+      <p><strong>LRN:</strong> {{ selected_student.lrn_no }}</p>
+      <p><strong>Grade:</strong> {{ selected_student.grade }}</p>
+      <p><strong>Voucher Recipient:</strong> {{ selected_student.voucher|yesno:"Yes,No" }}</p>
     </div>
-<br>
+
+    <h5>Transactions</h5>
+    <table class="table table-light">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>{% trans 'Course Title' %}</th>
+          <th>{% trans 'Course Code' %}</th>
+          {% for period in grading_periods %}
+            <th>{{ period|title }}</th>
+          {% endfor %}
+          <th>{% trans 'Points' %}</th>
+          <th>{% trans 'Comment' %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for course in courses %}
+          <tr class="{% if forloop.counter|divisibleby:2 %}bg-gray{% endif %}">
+            <th>{{ forloop.counter }}</th>
+            <td><a href="{{ course.get_absolute_url }}">{{ course.subject.sub_name }}</a></td>
+            <td>{{ course.subject.subject_code }}</td>
+
+            {% for period in grading_periods %}
+              <td>
+                {% with key=course.subject.ref|stringformat:"s"|add:","|add:period %}
+                  {{ grade_dict|get_grade:key|default:"-" }}
+                {% endwith %}
+              </td>
+            {% endfor %}
+
+            <td>{{ course.point }}</td>
+            <td>
+              {% if course.comment == 'PASS' %}
+                <i class="fas fa-check-circle"></i> {% trans 'PASS' %}
+              {% elif course.comment == 'FAIL' %}
+                <i class="fas fa-exclamation-circle"></i> {% trans 'FAIL' %}
+              {% else %}
+                <span>{{ course.comment }}</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% if result %}
+      <div class="text-end">
+        <strong>{% trans 'GPA:' %}</strong> {{ result.gpa }}
+      </div>
+    {% endif %}
+
+    <div class="text-end mt-3">
+      <h5>Net Balance: ₱{{ net_balance }}</h5>
+    </div>
+  {% else %}
+    <p>No student selected or available.</p>
+  {% endif %}
+</div>
 {% endblock %}

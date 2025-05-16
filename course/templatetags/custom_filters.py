@@ -18,6 +18,7 @@ def get_grade(grade_dict, args):
     try:
         subject_id_str, period = args.split(',', 1)
         subject_id = int(subject_id_str)
+        print()
         return grade_dict.get((subject_id, period))
     except Exception:
         return None

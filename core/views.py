@@ -13,7 +13,7 @@ from .models import NewsAndEvents, ActivityLog, Session, Semester
 # ########################################################
 @login_required
 def home_view(request):
-    print("Heeeeeeeeeeeeeee")
+    # print("Heeeeeeeeeeeeeee")
     items = NewsAndEvents.objects.all().order_by("-updated_date")
     context = {
         "title": "News & Events",
@@ -27,7 +27,7 @@ def home_view(request):
 def dashboard_view(request):
     logs = ActivityLog.objects.all().order_by("-created_at")[:10]
     gender_count = Student.get_gender_count()
-    print("Heeeeeeeeeeeeeee")
+    # print("Heeeeeeeeeeeeeee")
     context = {
         "student_count": User.objects.get_student_count(),
         "lecturer_count": User.objects.get_lecturer_count(),
