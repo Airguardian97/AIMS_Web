@@ -6,6 +6,11 @@ from accounts.decorators import admin_required, lecturer_required
 from accounts.models import User, Student
 from .forms import SessionForm, SemesterForm, NewsAndEventsForm
 from .models import NewsAndEvents, ActivityLog, Session, Semester
+from django.db.models import Sum
+from course.importmodels import (
+    Scharges,Spayment,Benefits
+  
+)
 
 
 # ########################################################
@@ -28,10 +33,19 @@ def dashboard_view(request):
     logs = ActivityLog.objects.all().order_by("-created_at")[:10]
     gender_count = Student.get_gender_count()
     # print("Heeeeeeeeeeeeeee")
+    
+    
+    charges_total = Scharges.objects.aggregate(total=Sum('amount'))['total'] or 0
+    payments_total = Spayment.objects.aggregate(total=Sum('amount'))['total'] or 0
+    discounts_total = Benefits.objects.aggregate(total=Sum('amount'))['total'] or 0
     context = {
         "student_count": User.objects.get_student_count(),
         "lecturer_count": User.objects.get_lecturer_count(),
         "superuser_count": User.objects.get_superuser_count(),
+        "Charges": charges_total,
+        "Payments": payments_total,
+        "Discounts": discounts_total,
+        "NetTotal": charges_total - payments_total + discounts_total,
         "males_count": gender_count["M"],
         "females_count": gender_count["F"],
         "logs": logs,

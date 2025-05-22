@@ -36,9 +36,9 @@
                     <th> {% trans 'Course Name' %} </th>
                     <th> {% trans 'Course Code' %} </th>
                     <th> {% trans 'Cr.Hr' %} </th>
-                    <th> {% trans 'Year' %} </th>
+                    {% comment %} <th> {% trans 'Year' %} </th>
                     <th> {% trans 'Semester' %} </th>
-                    <th> {% trans 'Current Semester' %} </th>
+                    <th> {% trans 'Current Semester' %} </th> {% endcomment %}
                     <th> {% trans 'Taken' %} </th>
                     
                 </tr>
@@ -51,15 +51,15 @@
                         {{ course.subject.sub_name }}</a></td>
                     <td>{{ course.subject.course.code }}</td>
                     <td>{{ course.subject.course.credit }}</td>
-                    <td>{{ course.subject.course.year }}</td>
-                    <td>{{ course.subject.course.semester }}</td>
-                    <th>
+                    {% comment %} <td>{{ course.subject.course.year }}</td>
+                    <td>{{ course.subject.course.semester }}</td> {% endcomment %}
+                    {% comment %} <th>
                         {% if course.course.is_current_semester == False %}
                         <i class="fas fa-times-circle fa-1-5x danger"></i>
                         {% else %}
                         <i class="fas fa-check-circle"></i>
                         {% endif %}
-                    </th>
+                    </th> {% endcomment %}
                     
                     <td class="success">
                         <i class="fas fa-check-circle"></i> {% trans 'Taken' %}
@@ -83,9 +83,9 @@
                     <th>{% trans 'Course Name' %}</th>
                     <th>{% trans 'Course Code' %}</th>
                     <th>{% trans 'Cr.Hr' %}</th>
-                    <th>{% trans 'Year' %}</th>
+                    {% comment %} <th>{% trans 'Year' %}</th>
                     <th>{% trans 'Semester' %}</th>
-                    <th>{% trans 'Current Semester' %}</th>
+                    <th>{% trans 'Current Semester' %}</th> {% endcomment %}
                     <th>{% trans 'Action' %}</th>
                 </tr>
             </thead>
@@ -102,7 +102,7 @@
                       
                     <td>{{ course.subject_code }}</td>
                     <td>{{ course.credit }}</td>
-                    <td>{{ course.year }}</td>
+                    {% comment %} <td>{{ course.year }}</td>
                     <td>{{ course.semester }}</td>
                     <td>
                         {% if course.is_current_semester %}
@@ -110,7 +110,7 @@
                         {% else %}
                         <i class="fas fa-times-circle text-danger"></i>
                         {% endif %}
-                    </td>
+                    </td> {% endcomment %}
                     
                     <td> 
                         <div class="dropdown">
@@ -123,7 +123,7 @@
                               <li><a href="{% url 'view_grade' course.ref %}" ><i class="fas fa-calendar-check"></i> Grade  </a></li>
                                
                            
-                                       </ul>
+                                </ul>
                         </div>
                     </td>
                     

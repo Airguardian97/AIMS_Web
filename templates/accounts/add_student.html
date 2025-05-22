@@ -41,8 +41,8 @@
             <div class="card">
                 <p class="form-title">{% trans 'Others' %}</p>
                 <div class="card-body">
-                    {{ form.program|as_crispy_field }}
-                    {{ form.level|as_crispy_field }}
+                    {% comment %} {{ form.program|as_crispy_field }}
+                    {{ form.level|as_crispy_field }} {% endcomment %}
                     {{ form.studid|as_crispy_field }}
                 </div>
             </div>

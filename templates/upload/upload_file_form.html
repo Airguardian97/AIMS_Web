@@ -15,7 +15,7 @@
     </ol>
 </nav>
     
-<p class="title-1">{% trans 'File upload for' %} {{ course|truncatechars:25 }}</p>
+<p class="title-1">{% trans 'File upload for' %} {{ course.sub_name|truncatechars:25 }}</p>
 <br><br>
 
 {% include 'snippets/messages.html' %}

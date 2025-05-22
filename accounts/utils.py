@@ -13,6 +13,7 @@ def generate_student_id():
     # Generate a username based on first and last name and registration date
     registered_year = datetime.now().strftime("%Y")
     students_count = get_user_model().objects.filter(is_student=True).count()
+    
     return f"{settings.STUDENT_ID_PREFIX}-{registered_year}-{students_count}"
 
 

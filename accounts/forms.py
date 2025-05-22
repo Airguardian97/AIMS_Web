@@ -7,7 +7,7 @@ from django.contrib.auth.forms import (
 from django.contrib.auth.forms import PasswordResetForm
 from course.models import Program
 from .models import User, Student, Parent, RELATION_SHIP, LEVEL, GENDERS, Lecturer
-from course.importmodels import Student as Student2
+from course.importmodels import Student as Student2,Teacher
 
 
 class StaffAddForm(UserCreationForm):
@@ -65,16 +65,18 @@ class StaffAddForm(UserCreationForm):
         label="Address",
     )
     
-    teacherid = forms.CharField(
-        max_length=30,
-        widget=forms.TextInput(
-            attrs={
-                "type": "text",
-                "class": "form-control",
-            }
+
+    
+        
+    teacherid = forms.ModelChoiceField(
+        queryset=Teacher.objects.exclude(ref__in=Lecturer.objects.values('teacherid')),  # Exclude students already in Student model
+        to_field_name='ref',  # This ensures that 'ref' is saved when submitted
+        widget=forms.Select(
+            attrs={"class": "browser-default custom-select form-control"}
         ),
         label="teacherid",
-    )    
+    )
+    
 
     phone = forms.CharField(
         max_length=30,
@@ -138,8 +140,8 @@ class StaffAddForm(UserCreationForm):
         if commit:
             user.save()
             Lecturer.objects.create(
-                student=user,
-                teacherid=self.cleaned_data.get("teachid"),
+                user=user,
+                teacherid=self.cleaned_data.get("teacherid").ref,
             )            
             
 
@@ -214,7 +216,7 @@ class StudentAddForm(UserCreationForm):
             attrs={
                 "class": "browser-default custom-select form-control",
             },
-        ),
+        ),required=False,
     )
     
     studid = forms.ModelChoiceField(
@@ -233,6 +235,7 @@ class StudentAddForm(UserCreationForm):
             attrs={"class": "browser-default custom-select form-control"}
         ),
         label="Program",
+        required=False,
     )
 
     email = forms.EmailField(
@@ -294,8 +297,8 @@ class StudentAddForm(UserCreationForm):
             user.save()
             Student.objects.create(
                 student=user,
-                level=self.cleaned_data.get("level"),
-                program=self.cleaned_data.get("program"),
+                # level=self.cleaned_data.get("level"),
+                # program=self.cleaned_data.get("program"),
                 stud_id=self.cleaned_data.get("studid").ref,
             )
 

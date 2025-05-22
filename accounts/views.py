@@ -25,9 +25,10 @@ from accounts.models import Parent, Student, User, Lecturer
 from core.models import Semester, Session
 # from course.models import Course
 from result.models import TakenCourse
-
+from django.db.models import OuterRef, Subquery
 from course.importmodels import (
-    Subject as Course
+    Subject as Course,
+    Gradelevels
   
 )
 
@@ -95,9 +96,22 @@ def profile(request):
     }
 
     if request.user.is_lecturer:
-        courses = Course.objects.filter(
-            teacher_id=request.user.lecturer.teacherid
-        )
+        # courses = Course.objects.filter(
+        #     teacher_id=request.user.lecturer.teacherid
+        # )
+        
+        
+        section_subquery = Gradelevels.objects.filter(
+            ref=OuterRef('grade_level')
+        ).values('section')[:1]
+        
+        courses = Course.objects.annotate(
+            gradelevel_section=Subquery(section_subquery)
+        ).filter(teacher_id=request.user.lecturer.teacherid)
+        
+        
+        
+        
         print(courses)
         context["courses"] = courses
         return render(request, "accounts/profile.html", context)
@@ -358,7 +372,9 @@ def edit_student(request, pk):
 
 @method_decorator([login_required, admin_required], name="dispatch")
 class StudentListView(FilterView):
+    
     queryset = Student.objects.all()
+    
     filterset_class = StudentFilter
     template_name = "accounts/student_list.html"
     paginate_by = 10

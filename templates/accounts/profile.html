@@ -63,7 +63,10 @@
                 {% if courses %}
                 <ul>
                     {% for course in courses %}
-                    <li><a href="{{ course.get_absolute_url }}" class="text-primary">{{ course.sub_name }}</a></li>
+                    <li>
+                        <a href="{{ course.get_absolute_url }}" class="text-primary">{{ course.sub_name }} </a>
+                        <small class="text-muted">   Section: {{ course.gradelevel_section }}</small>
+                    </li>
                     {% endfor %}
                 </ul>
                 {% else %}
@@ -114,3 +117,5 @@
 {% endif %}
 
 {% endblock content %}
+
+

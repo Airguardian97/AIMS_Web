@@ -17,14 +17,14 @@ def post_save_account_receiver(instance=None, created=False, *args, **kwargs):
                 instance.username = username
             else:
                 password = generate_password()
-
+            
             instance.set_password(password)
             instance.save()
             send_new_account_email(instance, password)
 
         if instance.is_lecturer:
             if not instance.username:
-                username, password = generate_student_credentials()
+                username, password = generate_lecturer_credentials()
                 instance.username = username
             else:
                 password = generate_password()

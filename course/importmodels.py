@@ -1002,6 +1002,10 @@ class Teacher(models.Model):
     contact_no = models.IntegerField(db_column='contact_No')  # Field name made lowercase.
     salary = models.FloatField(db_column='Salary')  # Field name made lowercase.
 
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name}" 
+
     class Meta:
         managed = False
         db_table = 'teacher'
