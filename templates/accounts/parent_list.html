@@ -13,7 +13,7 @@
 
 {% if request.user.is_superuser %}
 <div class="manage-wrap">
-    <a class="btn btn-primary" href="{% url 'add_parent' %}"><i class="fas fa-plus"></i>{% trans 'Add Parents' %}</a>
+    <a class="btn btn-primary" href="{% url 'add_parent' %}"><i class="fas fa-plus"></i>{% trans 'Add Parent' %}</a>
     {% comment %} <a class="btn btn-primary" target="_blank" href="{% url 'Parents_list_pdf' %}"><i class="fas fa-download"></i> {% trans 'Download pdf' %}</a><!--new--> {% endcomment %}
 </div>
 {% endif %}
@@ -58,7 +58,7 @@
                         <ul class="dropdown-menu">
                           <li><a class="dropdown-item" href="{% url 'parent_edit' pk=Parents.pk %}"><i class="unstyled me-2 fas fa-edit"></i>{% trans 'Update' %}</a></li>
                           <li><a class="dropdown-item"  target="_blank" href="{% url 'profile_single' Parents.id %}?download_pdf=1"><i class="unstyled me-2 fas fa-download"></i>{% trans 'Download PDF' %}</a></li>
-                          <li><a class="dropdown-item text-danger" href="{% url 'lecturer_delete' pk=Parents.pk %}"><i class="unstyled me-2 fas fa-trash-alt"></i> {% trans 'Delete' %}</a></li>
+                          <li><a class="dropdown-item text-danger" href="{% url 'parent_delete' Parents.pk %}"><i class="unstyled me-2 fas fa-trash-alt"></i> {% trans 'Delete' %}</a></li>
                         </ul>
                     </div>
                 </td>
@@ -70,7 +70,7 @@
                   <span class="text-danger">
                     {% trans 'No Parents(s).' %}
                     {% if request.user.is_superuser %}
-                    <a href="{% url 'add_Parents' %}">
+                    <a href="{% url 'add_parent' %}">
                     <i class="primary" style="font-size: 22px;">
                         {% trans 'Add Parents Now.' %}
                     </i>

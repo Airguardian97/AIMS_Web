@@ -448,6 +448,8 @@ class ParentAdd(CreateView):
         messages.success(self.request, "Parent added successfully.")
         return super().form_valid(form)
 
+
+
 @method_decorator([login_required, admin_required], name="dispatch")
 class ParentListView(FilterView):
     queryset = User.objects.filter(is_parent=True)
@@ -496,12 +498,14 @@ def edit_parent(request, pk):
     )
     
     
+    
 
 @login_required
 @admin_required
 def delete_parent(request, pk):
-    parent = get_object_or_404(parent, pk=pk)
-    full_name = parent.parent.get_full_name
+    parent = get_object_or_404(User, is_parent=True, pk=pk)
+    full_name = parent.get_full_name
     parent.delete()
     messages.success(request, f"parent {full_name} has been deleted.")
     return redirect("parent_list")
+

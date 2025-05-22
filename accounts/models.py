@@ -202,25 +202,23 @@ class Parent(models.Model):
         ordering = ("-user__date_joined",)
 
     def __str__(self):
-        return self.user.username
+        return self.user.get_full_name
     
     
+    # def __str__(self):
+    #     return self.user.username
+    
+    
+        
 class Lecturer(models.Model):
-    """
-    Connect student with their parent, parents can
-    only view their connected students information
-    """
-
     user = models.OneToOneField(User, on_delete=models.CASCADE)   
     teacherid = models.CharField(max_length=100, blank=True, null=True)
-
-
+    
     class Meta:
         ordering = ("-user__date_joined",)
 
     def __str__(self):
         return self.user.username
-
 
 class DepartmentHead(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
