@@ -62,6 +62,10 @@ urlpatterns = [
     path("parents/<int:pk>/delete/", delete_parent, name="parent_delete"),
     
     
+    
+    
+    
+    
     path("ajax/validate-username/", validate_username, name="validate_username"),
     path("register/", register, name="register"),
     # paths to pdf

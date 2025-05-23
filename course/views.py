@@ -710,14 +710,16 @@ def student_soa(request):
     student_info = {}
     transactions = []
     net_balance = 0.0
-
+    print(user_email)
+    
     try:
-        student_ref = request.GET.get('student_ref')
-        print(student_ref)
+        
         if request.user.is_student:
             student_ref = request.user.student.stud_id
             students = [request.user.student]
+            allowed_refs = [s.ref for s in students]
         else:
+            student_ref = request.GET.get('student_ref')            
             parents = Parent.objects.filter(email_address=user_email)
             if not parents.exists():
                 return render(request, 'school/error.html', {'message': 'Parent not found.'})
@@ -725,14 +727,20 @@ def student_soa(request):
 
             parent_students = Parentstudent.objects.filter(gid=parent.pid)
             students = Student.objects.filter(ref__in=[ps.stud_id for ps in parent_students])
-
-        if student_ref:
-            try:
-                selected_student = Student.objects.get(ref=student_ref)
-            except Student.DoesNotExist:
+            # Filter only if the student_ref is in the list of allowed students
+            allowed_refs = [s.ref for s in students]
+            print(allowed_refs)
+        
+        # print(student_ref)
+        # print(str(student_ref) in [str(ref) for ref in allowed_refs])
+        if str(student_ref) in [str(ref) for ref in allowed_refs]:                           
+            if student_ref:
+                try:
+                    selected_student = Student.objects.get(ref=student_ref)
+                except Student.DoesNotExist:
+                    selected_student = students.first()
+            else:
                 selected_student = students.first()
-        else:
-            selected_student = students.first()
 
         latest_register = None
         if selected_student:

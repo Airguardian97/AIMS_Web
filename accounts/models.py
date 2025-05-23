@@ -78,7 +78,7 @@ class User(AbstractUser):
     picture = models.ImageField(
         upload_to="profile_pictures/%y/%m/%d/", default="default.png", null=True
     )
-    email = models.EmailField(blank=True, null=True)
+    email = models.EmailField(blank=True,max_length=60, null=True)
     
 
     username_validator = ASCIIUsernameValidator()

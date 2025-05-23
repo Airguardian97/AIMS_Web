@@ -28,7 +28,8 @@ from result.models import TakenCourse
 from django.db.models import OuterRef, Subquery
 from course.importmodels import (
     Subject as Course,
-    Gradelevels
+    Gradelevels,
+    Studentenrollsubject
   
 )
 
@@ -159,7 +160,7 @@ def profile_single(request, user_id):
 
     if user.is_lecturer:
         courses = Course.objects.filter(
-            allocated_course__lecturer__pk=user_id, semester=current_semester
+            allocated_course__lecturer__pk=user_id
         )
         context.update(
             {
@@ -168,10 +169,15 @@ def profile_single(request, user_id):
             }
         )
     elif user.is_student:
+        print(user.is_student)
         student = get_object_or_404(Student, student__pk=user_id)
-        courses = TakenCourse.objects.filter(
-            student__student__id=user_id, course__level=student.level
-        )
+        # courses = TakenCourse.objects.filter(
+        #     student__student__id=user_id
+        # )
+        
+        courses = Studentenrollsubject.objects.filter(sr__stud_id=student.stud_id).select_related('sr', 'subject')
+        
+        
         context.update(
             {
                 "user_type": "Student",
