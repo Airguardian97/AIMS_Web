@@ -312,6 +312,17 @@ class LecturerOnlyForm(forms.ModelForm):
 
 
 class ProfileUpdateForm(UserChangeForm):
+    username = forms.CharField(
+        max_length=30,
+        widget=forms.TextInput(
+            attrs={"type": "text", "class": "form-control", "id": "username_id"}
+        ),
+        label="Username",
+        required=False,
+    )
+
+    
+    
     email = forms.EmailField(
         widget=forms.TextInput(
             attrs={
@@ -385,6 +396,7 @@ class ProfileUpdateForm(UserChangeForm):
     class Meta:
         model = User
         fields = [
+            "username",
             "first_name",
             "last_name",
             "gender",
@@ -428,6 +440,7 @@ class ParentAddForm(UserCreationForm):
             }
         ),
         label="Username",
+        required=False,
     )
     address = forms.CharField(
         max_length=30,
@@ -483,13 +496,13 @@ class ParentAddForm(UserCreationForm):
         label="Email Address",
     )
 
-    student = forms.ModelChoiceField(
-        queryset=Student.objects.all(),
-        widget=forms.Select(
-            attrs={"class": "browser-default custom-select form-control"}
-        ),
-        label="Student",
-    )
+    # student = forms.ModelChoiceField(
+    #     queryset=Student.objects.all(),
+    #     widget=forms.Select(
+    #         attrs={"class": "browser-default custom-select form-control"}
+    #     ),
+    #     label="Student",
+    # )
 
     relation_ship = forms.CharField(
         widget=forms.Select(
@@ -498,6 +511,7 @@ class ParentAddForm(UserCreationForm):
                 "class": "browser-default custom-select form-control",
             },
         ),
+        label="Relation",
     )
 
     password1 = forms.CharField(
@@ -509,6 +523,8 @@ class ParentAddForm(UserCreationForm):
             }
         ),
         label="Password",
+        
+        required=False,
     )
 
     password2 = forms.CharField(
@@ -520,6 +536,8 @@ class ParentAddForm(UserCreationForm):
             }
         ),
         label="Password Confirmation",
+        
+        required=False,
     )
 
     # def validate_email(self):
@@ -542,7 +560,6 @@ class ParentAddForm(UserCreationForm):
         user.save()
         parent = Parent.objects.create(
             user=user,
-            student=self.cleaned_data.get("student"),
             relation_ship=self.cleaned_data.get("relation_ship"),
         )
         parent.save()

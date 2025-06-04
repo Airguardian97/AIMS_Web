@@ -16,6 +16,12 @@ def generate_student_id():
     
     return f"{settings.STUDENT_ID_PREFIX}-{registered_year}-{students_count}"
 
+def generate_parent_id():
+    # Generate a username based on first and last name and registration date
+    registered_year = datetime.now().strftime("%Y")
+    parents_count = get_user_model().objects.filter(is_parent=True).count()
+    
+    return f"{settings.PARENT_ID_PREFIX}-{registered_year}-{parents_count}"
 
 def generate_lecturer_id():
     # Generate a username based on first and last name and registration date
@@ -30,6 +36,9 @@ def generate_student_credentials():
 
 def generate_lecturer_credentials():
     return generate_lecturer_id(), generate_password()
+
+def generate_parent_credentials():
+    return generate_parent_id(), generate_password()
 
 
 class EmailThread(threading.Thread):
@@ -52,6 +61,8 @@ class EmailThread(threading.Thread):
 def send_new_account_email(user, password):
     if user.is_student:
         template_name = "accounts/email/new_student_account_confirmation.html"
+    elif user.is_parent:
+        template_name = "accounts/email/new_parent_account_confirmation.html"
     else:
         template_name = "accounts/email/new_lecturer_account_confirmation.html"
     email = {

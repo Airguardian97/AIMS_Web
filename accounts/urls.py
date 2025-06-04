@@ -57,7 +57,7 @@ urlpatterns = [
         edit_student_program,
         name="student_program_edit",
     ),
-    path("parents/add/", ParentAdd.as_view(), name="add_parent"),
+    path("parents/add/", ParentAdd, name="add_parent"),
     path("parents/", ParentListView.as_view(), name="parents_list"),
     path("parents/<int:pk>/edit/", edit_parent, name="parent_edit"),
     path("parents/<int:pk>/delete/", delete_parent, name="parent_delete"),

@@ -86,7 +86,7 @@ def register(request):
 
 @login_required
 def profile(request):
-    """Show profile of the current user."""
+    """Show profile of the current user."""    
     current_session = Session.objects.filter(is_current_session=True).first()
     current_semester = Semester.objects.filter(
         is_current_semester=True, session=current_session
@@ -161,9 +161,15 @@ def profile_single(request, user_id):
     }
 
     if user.is_lecturer:
-        courses = Course.objects.filter(
-            allocated_course__lecturer__pk=user_id
-        )
+        
+        
+        section_subquery = Gradelevels.objects.filter(
+            ref=OuterRef('grade_level')
+        ).values('section')[:1]
+        
+        courses = Course.objects.annotate(
+            gradelevel_section=Subquery(section_subquery)
+        ).filter(teacher_id=user_id)
         context.update(
             {
                 "user_type": "Lecturer",
@@ -335,7 +341,6 @@ def delete_staff(request, pk):
 # ########################################################
 
 
-@login_required
 @admin_required
 def student_add_view(request):
     if request.method == "POST":
@@ -446,15 +451,37 @@ def edit_student_program(request, pk):
 # ########################################################
 
 
-@method_decorator([login_required, admin_required], name="dispatch")
-class ParentAdd(CreateView):
-    model = Parent
-    form_class = ParentAddForm
-    template_name = "accounts/parent_form.html"
+# @method_decorator([login_required, admin_required], name="dispatch")
+# class ParentAdd(CreateView):
+#     model = Parent
+#     form_class = ParentAddForm
+#     template_name = "accounts/parent_form.html"
 
-    def form_valid(self, form):
-        messages.success(self.request, "Parent added successfully.")
-        return super().form_valid(form)
+#     def form_valid(self, form):
+#         messages.success(self.request, "Parent added successfully.")
+#         return super().form_valid(form)
+
+
+
+def ParentAdd(request):
+    if request.method == "POST":
+        form = ParentAddForm(request.POST)
+        if form.is_valid():
+            parent = form.save()
+            full_name = parent.get_full_name
+            email = parent.email
+            messages.success(
+                request,
+                f"Account for {full_name} has been created. "
+                f"An email with account credentials will be sent to {email} within a minute.",
+            )
+            return redirect("parents_list")
+        messages.error(request, "Correct the error(s) below.")
+    else:
+        form = ParentAddForm()
+    return render(
+        request, "accounts/parent_form.html", {"title": "Add Student", "form": form}
+    )   
 
 
 
@@ -515,7 +542,7 @@ def delete_parent(request, pk):
     full_name = parent.get_full_name
     parent.delete()
     messages.success(request, f"parent {full_name} has been deleted.")
-    return redirect("parent_list")
+    return redirect("parents_list")
 
 
 

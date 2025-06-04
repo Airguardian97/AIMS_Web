@@ -268,7 +268,7 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 STUDENT_ID_PREFIX = config("STUDENT_ID_PREFIX", "ugr")
 LECTURER_ID_PREFIX = config("LECTURER_ID_PREFIX", "lec")
-
+LECTURER_ID_PREFIX = config("PARENT_ID_PREFIX", "pa")
 
 # Constants
 YEARS = (
