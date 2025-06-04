@@ -9,7 +9,7 @@ from django.utils.decorators import method_decorator
 from django.views.generic import CreateView
 from django_filters.views import FilterView
 from xhtml2pdf import pisa
-
+from django.views.decorators.http import require_GET
 from accounts.decorators import admin_required
 from accounts.filters import LecturerFilter, StudentFilter, ParentFilter
 from accounts.forms import (
@@ -18,7 +18,8 @@ from accounts.forms import (
     ProgramUpdateForm,
     StaffAddForm,
     StudentAddForm,  
-    LecturerOnlyForm
+    LecturerOnlyForm,
+    StudentinfoForm
     
 )
 from accounts.models import Parent, Student, User, Lecturer
@@ -29,7 +30,8 @@ from django.db.models import OuterRef, Subquery
 from course.importmodels import (
     Subject as Course,
     Gradelevels,
-    Studentenrollsubject
+    Studentenrollsubject,
+    License
   
 )
 
@@ -515,3 +517,31 @@ def delete_parent(request, pk):
     messages.success(request, f"parent {full_name} has been deleted.")
     return redirect("parent_list")
 
+
+
+@require_GET
+def activation(request, license_key):
+    try:
+        license = License.objects.get(lisense=license_key)
+        return JsonResponse({
+            "status": "success",
+            "license_key": license_key,
+            "validated_date": license.dateended.isoformat()
+        })
+    except License.DoesNotExist:
+        return JsonResponse({
+            "status": "fail",
+            "message": "Invalid license key"
+        }, status=404)
+        
+        
+        
+def student_register(request):
+    if request.method == 'POST':
+        form = StudentinfoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('success_page')  # Update with your success page
+    else:
+        form = StudentinfoForm()
+    return render(request, 'accounts/registration.html', {'form': form})

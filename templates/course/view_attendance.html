@@ -29,7 +29,8 @@
                             {% for student in students %}
                                 <tr>
                                     <td>{{ student.ref }}</td>
-                                    <td>{{ student.first_name }} {{ student.last_name }}</td>
+                                    <td><strong>{{ student.last_name }}, {{ student.first_name }} {{ student.middle_name }}</strong></td>
+
                                     <td>
                                         <select name="status_{{ student.ref }}" class="form-select">
                                             <option value="Present">Present</option>

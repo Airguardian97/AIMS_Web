@@ -1046,3 +1046,13 @@ class UploadedFiles(models.Model):
     class Meta:
         managed = False
         db_table = 'uploaded_files'
+
+
+
+class License(models.Model):
+    lisense = models.CharField(max_length=90, unique=True)  # matches varchar(90)
+    dateended = models.DateField()  # or DateTimeField() if you want time as well
+
+    class Meta:
+        managed = False
+        db_table = 'aimsvalidation'

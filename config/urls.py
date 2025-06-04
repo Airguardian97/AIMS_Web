@@ -13,7 +13,7 @@ from django.contrib.auth.views import (
     LoginView,
     LogoutView,
 )
-
+from accounts.views import student_register
 
 admin.site.site_header = "AIMS Admin"
 
@@ -21,6 +21,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("i18n/", include("django.conf.urls.i18n")),
     path('logout/', LogoutView.as_view(), name='logout', kwargs={'next_page': '/'}),
+    path('en/student/create/', student_register, name='student_create'),
 ]
 
 urlpatterns += i18n_patterns(

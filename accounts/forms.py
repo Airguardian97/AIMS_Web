@@ -547,3 +547,21 @@ class ParentAddForm(UserCreationForm):
         )
         parent.save()
         return user
+
+
+
+class StudentinfoForm(forms.ModelForm):
+    class Meta:
+        model = Student2
+        exclude = ['studentid', 'rfid']
+        widgets = {
+            'dob': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'sex': forms.Select(choices=[('Male', 'Male'), ('Female', 'Female')], attrs={'class': 'form-select'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for visible in self.visible_fields():
+            if 'form-control' not in visible.field.widget.attrs.get('class', ''):
+                visible.field.widget.attrs['class'] = 'form-control'

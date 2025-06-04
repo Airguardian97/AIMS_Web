@@ -145,7 +145,7 @@ def view_attendance(request, course_id):
         {
             'title': f"Attendance for {course.sub_name}",
             'course': course,
-            'students': students,
+            'students': students.order_by('sex', 'last_name'),
             
         }
     )
@@ -889,6 +889,15 @@ def view_grade(request, course_id):
     # Get distinct grading periods for the course
     grading_periods = Grade.objects.filter(subject_code=course).values_list('grading_period', flat=True).distinct()
 
+    # If no grading periods found, use defaults
+    if not grading_periods:
+        grading_periods = [
+            'First Grading',
+            'Second Grading',
+            'Third Grading',
+            'Fourth Grading'
+        ]
+    
     # Get students enrolled in this course
     enrolled_ids = Studentenrollsubject.objects.filter(subject=course_id).values_list('sr_id', flat=True)
     students_register = Studentregister.objects.filter(sr_id__in=enrolled_ids)
@@ -957,7 +966,7 @@ def view_grade(request, course_id):
     return render(request, 'course/view_grade.html', {
         'course': course,
         'grading_periods': grading_periods,
-        'students': enrolled_students,
+        'students': enrolled_students.order_by('sex', 'last_name'),
         'student_grades': student_grades,
     })
     

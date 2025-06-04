@@ -21,7 +21,8 @@
                 <tbody>
                     {% for student in students %}
                         <tr>
-                            <td><strong>{{ student.first_name }} {{ student.last_name }}</strong></td>
+                            <td><strong>{{ student.last_name }}, {{ student.first_name }} {{ student.middle_name }}</strong></td>
+
                             {% for period in grading_periods %}
                                 <td>
                                     <div class="d-flex justify-content-between align-items-center">

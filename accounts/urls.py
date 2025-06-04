@@ -30,7 +30,8 @@ from .views import (
     render_student_pdf_list,  # new
     ParentListView,
     edit_parent,
-    delete_parent
+    delete_parent,
+    activation
 )
 
 # from .forms import EmailValidationOnForgotPassword
@@ -83,6 +84,13 @@ urlpatterns = [
     # ################################################################
     # path('login/', LoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(), name='logout', kwargs={'next_page': '/'}),
+    
+    
+    
+    
+    
+    
+    
     # path('password-reset/', PasswordResetView.as_view(
     #     form_class=EmailValidationOnForgotPassword,
     #     template_name='registration/password_reset.html'
@@ -101,4 +109,9 @@ urlpatterns = [
     # ),
     #      name='password_reset_complete')
     # ################################################################
+    
+    
+    
+    
+     path('myapp/activation/<str:license_key>/', activation, name='activation'),
 ]
