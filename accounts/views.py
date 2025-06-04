@@ -31,8 +31,8 @@ from course.importmodels import (
     Subject as Course,
     Gradelevels,
     Studentenrollsubject,
-    License
-  
+    License,
+    Parent as Parentinfo
 )
 
 
@@ -120,14 +120,16 @@ def profile(request):
         return render(request, "accounts/profile.html", context)
 
     if request.user.is_student:
-        student = get_object_or_404(Student, student__pk=request.user.id)
-        parent = Parent.objects.filter(student=student).first()
+        student = get_object_or_404(Student, student__pk=request.user.id)   
+         
+        
+        
         courses = TakenCourse.objects.filter(
             student_id=request.user.student.stud_id
         )
         context.update(
             {
-                "parent": parent,
+                # ""parent": parent,"
                 "courses": courses,
                 "level": student.level,
             }

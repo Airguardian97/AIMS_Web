@@ -713,27 +713,38 @@ def student_soa(request):
     print(user_email)
     
     try:
-        
         if request.user.is_student:
             student_ref = request.user.student.stud_id
             students = [request.user.student]
-            allowed_refs = [s.ref for s in students]
+            allowed_refs = [student_ref]
+            print(student_ref)
         else:
-            student_ref = request.GET.get('student_ref')            
+            student_ref = request.GET.get('student_ref')         
             parents = Parent.objects.filter(email_address=user_email)
             if not parents.exists():
                 return render(request, 'school/error.html', {'message': 'Parent not found.'})
+            
             parent = parents.first()
 
             parent_students = Parentstudent.objects.filter(gid=parent.pid)
             students = Student.objects.filter(ref__in=[ps.stud_id for ps in parent_students])
-            # Filter only if the student_ref is in the list of allowed students
             allowed_refs = [s.ref for s in students]
+
+            if not student_ref:
+                student_ref = allowed_refs[0] if allowed_refs else None
+
+            
+            
+            
             print(allowed_refs)
+            
         
         # print(student_ref)
         # print(str(student_ref) in [str(ref) for ref in allowed_refs])
-        if str(student_ref) in [str(ref) for ref in allowed_refs]:                           
+        
+        print(student_ref)
+        print(str(student_ref) in [str(ref) for ref in allowed_refs])    
+        if str(student_ref) in [str(ref) for ref in allowed_refs]:                       
             if student_ref:
                 try:
                     selected_student = Student.objects.get(ref=student_ref)
