@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-
+from django.conf import settings
 from accounts.decorators import admin_required, lecturer_required
 from accounts.models import User, Student
 from .forms import SessionForm, SemesterForm, NewsAndEventsForm
@@ -35,9 +35,15 @@ def dashboard_view(request):
     # print("Heeeeeeeeeeeeeee")
     
     
-    charges_total = Scharges.objects.aggregate(total=Sum('amount'))['total'] or 0
-    payments_total = Spayment.objects.aggregate(total=Sum('amount'))['total'] or 0
-    discounts_total = Benefits.objects.aggregate(total=Sum('amount'))['total'] or 0
+    file = open(settings.SCHOOLYEAR_PATH, 'r')
+    schoolyear = file.read()
+    print(schoolyear)
+    
+    school_year = schoolyear  # Replace this with the actual value you're filtering by
+
+    charges_total = Scharges.objects.filter(school_year=school_year).aggregate(total=Sum('amount'))['total'] or 0
+    payments_total = Spayment.objects.filter(school_year=school_year).aggregate(total=Sum('amount'))['total'] or 0
+    discounts_total = Benefits.objects.filter(school_year=school_year).aggregate(total=Sum('amount'))['total'] or 0
     context = {
         "student_count": User.objects.get_student_count(),
         "lecturer_count": User.objects.get_lecturer_count(),
@@ -223,3 +229,22 @@ def unset_current_semester():
     if current_semester:
         current_semester.is_current_semester = False
         current_semester.save()
+
+
+
+def systemschoolyear(request):
+    from urllib.parse import urlparse
+    url = urlparse(request.META['HTTP_REFERER']).path
+    from django.urls import resolve
+    try:
+        redirect_url = resolve(url)
+        title = request.POST.get('title', 'No Name')
+        file = open(settings.SCHOOLYEAR_PATH, 'w')
+        file.write(title)
+        file.close()
+        messages.success(
+            request, "Election title has been changed to " + str(title))
+        return redirect(url)
+    except Exception as e:
+        messages.error(request, e)
+        return redirect("/")

@@ -72,3 +72,18 @@ def send_new_account_email(user, password):
         "context": {"user": user, "password": password},
     }
     EmailThread(**email).start()
+
+
+def send_attendance_confirmation_email(student, course, status, date,recipient_email):
+    email = {
+        "subject": "Attendance Confirmation",
+        "recipient_list": [recipient_email],
+        "template_name": "accounts/email/confirmation.html",
+        "context": {
+            "student": student,
+            "course": course,
+            "status": status,
+            "date": date,
+        },
+    }    
+    #EmailThread(**email).start()

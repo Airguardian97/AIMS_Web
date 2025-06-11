@@ -18,7 +18,7 @@ from datetime import date
 from django.http import HttpResponse
 from django.template.loader import get_template
 from xhtml2pdf import pisa
-
+from accounts.utils import send_attendance_confirmation_email
 
 # from accounts.models import Student
 from core.models import Semester
@@ -154,13 +154,13 @@ def view_attendance(request, course_id):
 def save_attendance(request, course_id):
     if request.method == "POST":
         attendance_date = request.POST.get('attendance_date')
-        
+
         if not attendance_date:
             messages.error(request, "Attendance date is required!")
             return redirect('program_detail', pk=course_id)
-        
+
         course = get_object_or_404(Course, ref=course_id)
-        print(course_id)
+
         # Fetch enrolled students
         enrolled_ids = Studentenrollsubject.objects.filter(subject_id=course_id).values_list('sr_id', flat=True)
         students_register = Studentregister.objects.filter(sr_id__in=enrolled_ids)
@@ -169,19 +169,41 @@ def save_attendance(request, course_id):
         # Loop through students and save attendance
         for student in students:
             status = request.POST.get(f"status_{student.ref}")
+
+            # Get parents for the student
+            parents = Parent.objects.filter(
+                pid__in=Parentstudent.objects.filter(stud_id=student.ref).values_list('gid', flat=True)
+            ).values("first_name", "middle_name", "last_name", "email_address", "contact_no")
+
             if status:
                 Attendance.objects.create(
                     date=attendance_date,
                     cl=course_id,
                     present_status=status,
-                    stud=student.ref,   # or another field you use for roll number
-                    subject_code=course.ref  # or sub_name if you prefer
+                    stud=student.ref,
+                    subject_code=course.ref
                 )
 
+                # Send confirmation email to each parent
+                for parent in parents:
+                    email = parent['email_address']
+                    if email and email != 'NA' and '@' in email:
+                        send_attendance_confirmation_email(
+                            student=student,
+                            course=course,
+                            status=status,
+                            date=attendance_date,
+                            recipient_email=email  # Accessing from dict
+                        )
+                        print(email)
+
         messages.success(request, "Attendance saved successfully!")
-        return redirect('view_attendance' , course_id=course_id)
+        return redirect('view_attendance', course_id=course_id)
 
     return redirect('view_attendance', course_id=course_id)
+
+
+
 
 @login_required
 def attendance_pdf(request, course_id):

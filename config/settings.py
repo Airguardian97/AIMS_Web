@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 import os
 from decouple import config
 from django.utils.translation import gettext_lazy as _
-
+from django.conf import settings
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -126,10 +126,10 @@ DATABASES = {
     
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'aai519',  # Replace with your actual database name
-        'USER': 'aims',      # XAMPP uses 'root' by default for MySQL
-        'PASSWORD': '12345J@s0n',      # XAMPP's MySQL 'root' user has no password by default, but add one if you’ve set it
-        'HOST': 'localhost', # This points to your local MySQL server in XAMPP
+        'NAME': 'aai',  # Replace with your actual database name
+        'USER': 'aai',      # XAMPP uses 'root' by default for MySQL
+        'PASSWORD': 'p@ssw0rd',      # XAMPP's MySQL 'root' user has no password by default, but add one if you’ve set it
+        'HOST': '172.16.11.250', # This points to your local MySQL server in XAMPP
         'PORT': '3306',      # Default MySQL port in XAMPP
     }
 }
@@ -301,3 +301,7 @@ SEMESTER_CHOICES = (
 
 # settings.py
 WEBSITE_NAME = "AIMS System"
+
+
+SCHOOLYEAR_PATH = os.path.join(
+    BASE_DIR, 'system_schoolyear.txt')  # Election Title File

@@ -898,6 +898,14 @@ class Student(models.Model):
     rfid = models.CharField(max_length=90, blank=True, null=True)
 
 
+    @property
+    def get_full_name(self):
+        full_name = self.first_name
+        if self.first_name and self.last_name:
+            full_name = self.first_name + " " + self.last_name
+        return full_name
+
+
     def __str__(self):
         return f"{self.first_name} {self.last_name}" 
     

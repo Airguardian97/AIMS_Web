@@ -93,6 +93,7 @@
 		{% url 'home' as hom %} {% url 'dashboard' as dash %} {% url 'profile' as prof %}
 		{% url 'lecturer_list' as lec %}
 		{% url 'parents_list' as pert %}
+		{% url 'set_schoolyear' as set %}
 		{% url 'student_list' as stu %} {% url 'course_allocation_view' as cav %}
 		{% url 'programs' as pro %} {% url 'session_list' as sess %} {% url 'semester_list' as sem %}
 		{% url 'add_score' as ascore %} {% url 'grade_results' as vr %}{% url 'ass_results' as ar %}
@@ -128,6 +129,8 @@
 			<li class="{% if request.path == pert %}active{% endif %}">
 				<a href="{% url 'parents_list' %}"><i class="fas fas fa-people-roof"></i>{% trans 'Parents' %}</a>
 			</li>
+	
+
 			{% endif %}
 
 			{% if request.user.is_lecturer or request.user.is_student %}
@@ -159,6 +162,9 @@
 			<li class="{% if request.path == qpr %}active{% endif %}">
 				<a href="{% url 'quiz_progress' %}"><i class="fas fa-record-vinyl"></i>{% trans 'Quiz Progress Rec' %}</a>
 			</li>
+					<li class="{% if request.path == set %}active{% endif %}">
+    				<a href="#config" data-bs-toggle="modal"><i class="fa fa-school"></i> <span>School Year</span></a>
+			</li>
 			{% comment %} <li class="{% if request.path == cav %}active{% endif %}">
 				<a href="{% url 'course_allocation_view' %}"><i class="fas fa-tasks"></i>{% trans 'Course Allocation' %}</a>
 			</li>
@@ -189,11 +195,12 @@
 			</li>
 			{% endif %}
 
-			{% if request.user.is_parent or request.user.is_student %}			
+			{% if request.user.is_parent or request.user.is_student %}	
 		
 		
 			<li class="{% if request.path == vr %}active{% endif %}">
 				<a href="{% url 'grade_results' %}"><i class="fa fa-spell-check"></i>{% trans 'Grade Results' %}</a>
+
 			</li>
 			{% endif %}
 
@@ -238,6 +245,9 @@
 		</div>
 	</footer>
 </div>
+
+
+
 
 {% block js %}
 <script>
