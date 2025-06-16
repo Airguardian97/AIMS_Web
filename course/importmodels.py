@@ -65,7 +65,8 @@ class AccountsUser(models.Model):
     address = models.CharField(max_length=60, blank=True, null=True)
     picture = models.CharField(max_length=100, blank=True, null=True)
     email = models.CharField(max_length=254, blank=True, null=True)
-
+    
+    
     class Meta:
         managed = False
         db_table = 'accounts_user'

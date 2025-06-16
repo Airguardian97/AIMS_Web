@@ -86,4 +86,4 @@ def send_attendance_confirmation_email(student, course, status, date,recipient_e
             "date": date,
         },
     }    
-    #EmailThread(**email).start()
+    EmailThread(**email).start()

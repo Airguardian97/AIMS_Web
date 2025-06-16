@@ -22,8 +22,17 @@ from accounts.forms import (
     StudentinfoForm
     
 )
+
+from io import TextIOWrapper
+import csv
+
 from accounts.models import Parent, Student, User, Lecturer
 from core.models import Semester, Session
+from django.db.models import Sum
+from core.fastfood_models import TblAcc, TblPos
+
+from course.importmodels import Student as Studentinfo
+
 # from course.models import Course
 from result.models import TakenCourse
 from django.db.models import OuterRef, Subquery
@@ -120,9 +129,23 @@ def profile(request):
         return render(request, "accounts/profile.html", context)
 
     if request.user.is_student:
-        student = get_object_or_404(Student, student__pk=request.user.id)   
+        student = get_object_or_404(Student, student__pk=request.user.id)  
          
+        studentinfo = get_object_or_404(Studentinfo, ref=student.stud_id)   
+        studschool = studentinfo.rfid
+
+        print(studschool)
         
+        if student:
+            total_balance = TblAcc.objects.using('caf_db').filter(stud_id=studschool).aggregate(total=Sum('balance'))['total'] or 0
+            total_pos = TblPos.objects.using('caf_db').filter(customerid=studschool).aggregate(total=Sum('grandtotal'))['total'] or 0
+            
+            net = total_balance - total_pos
+            print(net)
+        else:
+            print("Student not found.")
+        
+   
         
         courses = TakenCourse.objects.filter(
             student_id=request.user.student.stud_id
@@ -132,9 +155,11 @@ def profile(request):
                 # ""parent": parent,"
                 "courses": courses,
                 "level": student.level,
+                 "Cafeteria": net,
             }
         )
         return render(request, "accounts/profile.html", context)
+
 
     # For superuser or other staff
     staff = User.objects.filter(is_lecturer=True)
@@ -171,7 +196,9 @@ def profile_single(request, user_id):
         
         courses = Course.objects.annotate(
             gradelevel_section=Subquery(section_subquery)
-        ).filter(teacher_id=user_id)
+        ).filter(teacher_id=user.lecturer.teacherid)
+        print(courses)
+        
         context.update(
             {
                 "user_type": "Lecturer",
@@ -365,6 +392,53 @@ def student_add_view(request):
     )
 
 
+
+def bulk_upload_students(request):
+    if request.method == 'POST' and request.FILES.get('csv_file'):
+        csv_file = request.FILES['csv_file']
+        decoded_file = csv_file.read().decode('utf-8').splitlines()
+        reader = csv.DictReader(decoded_file)
+
+        print("asdadsasd")
+        with transaction.atomic():
+            for row in reader:
+                if User.objects.filter(username=row['username']).exists():
+                    continue  # Skip existing users
+
+                user = User.objects.create_user(
+                    username=row['username'],
+                    first_name=row['first_name'],
+                    last_name=row['last_name'],
+                    email=row['email'],
+                    password=row['password'],
+                )
+                user.is_student = True
+                user.gender = row['gender']
+                user.address = row['address']
+                user.phone = row['phone']
+                user.save()
+
+                # Get foreign keys
+                program = Program.objects.filter(pk=row['program']).first()
+                stud2 = Student2.objects.filter(ref=row['studid']).first()
+
+                if not stud2:
+                    messages.error(request, f"Student2 with ref {row['studid']} not found.")
+                    continue
+
+                Student.objects.create(
+                    student=user,
+                    level=row['level'],
+                    program=program,
+                    stud_id=stud2.ref,
+                )
+
+        messages.success(request, "Bulk student upload completed.")
+        return redirect('student_list')
+
+    return render(request, 'accounts/bulk_upload.html', {"title": "Bulk Upload Students"})
+
+
 @login_required
 @admin_required
 def edit_student(request, pk):
@@ -387,9 +461,7 @@ def edit_student(request, pk):
 
 @method_decorator([login_required, admin_required], name="dispatch")
 class StudentListView(FilterView):
-    
     queryset = Student.objects.all()
-    
     filterset_class = StudentFilter
     template_name = "accounts/student_list.html"
     paginate_by = 10
@@ -399,6 +471,70 @@ class StudentListView(FilterView):
         context["title"] = "Students"
         return context
 
+    def post(self, request, *args, **kwargs):
+        csv_file = request.FILES.get('csv_file')
+
+        if not csv_file:
+            messages.error(request, "No file uploaded.")
+            return redirect(request.path)
+
+        if not csv_file.name.endswith('.csv'):
+            messages.error(request, "Please upload a valid CSV file.")
+            return redirect(request.path)
+
+        try:
+            decoded_file = TextIOWrapper(csv_file.file, encoding='utf-8')
+            reader = csv.DictReader(decoded_file)
+
+            success_count = 0
+            skipped_count = 0
+
+            for row in reader:
+                username = row.get('username', '').strip()
+                email = row.get('email', '').strip()
+                print(username)
+                if not username or not email:
+                    skipped_count += 1
+                    continue  # Required fields missing
+
+                user, created = User.objects.get_or_create(
+                    username=username,
+                    defaults={
+                        'first_name': row.get('first_name', '').strip(),
+                        'last_name': row.get('last_name', '').strip(),
+                        'email': email,
+                        'is_student' : 1,
+                        'address': row.get('address', ''),
+                        'phone': row.get('phone', ''),
+                    }                    
+                )
+                
+                
+
+                # Set password if user was created
+                if created:
+                    user.set_password(row.get('password') or "default123")
+                    user.save()
+
+                Student.objects.update_or_create(
+                    student=user,
+                    defaults={
+                        # 'address': row.get('address', ''),
+                        # 'phone': row.get('phone', ''),
+                        # 'gender': row.get('gender', ''),
+                        # 'level': row.get('level', 1),
+                        # 'program': row.get('program', 1),
+                        'stud_id': row.get('studid', ''),
+                    }
+                )
+
+                success_count += 1
+
+            messages.success(request, f"Imported {success_count} students. Skipped {skipped_count} invalid rows.")
+        except Exception as e:
+            messages.error(request, f"Error processing file: {e}")
+
+        return redirect(request.path)
 
 @login_required
 @admin_required

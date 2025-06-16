@@ -66,13 +66,23 @@ from result.models import TakenCourse
 class ProgramFilterView(FilterView):
     filterset_class = GradelevelsFilter    
     template_name = "course/program_list.html"
-    
-    # if not self.request.user.is_superuser:
-    #     filterset_class = GradelevelsFilter   
-    
+    queryset = Gradelevels.objects.all()  # Required for FilterView
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["title"] = "Programs"
+
+        # Filtered grade levels
+        gradelevels_qs = self.get_queryset()
+
+        # Count students per grade level (ref)
+        
+        enrolled_counts = {
+            grade.ref: Studentregister.objects.filter(grade_level=grade.ref).count()
+            for grade in gradelevels_qs
+        }
+        print(enrolled_counts)
+        context["enrolled_counts"] = enrolled_counts  # Dict: {ref: count}
         return context
 
 

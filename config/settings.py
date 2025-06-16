@@ -31,7 +31,7 @@ SECRET_KEY = config(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG", default=True, cast=bool)
 
-ALLOWED_HOSTS = ["*", "adilmohak1.pythonanywhere.com"]
+ALLOWED_HOSTS = ["*"]
 
 # change the default user models to our custom model
 AUTH_USER_MODEL = "accounts.User"
@@ -126,13 +126,24 @@ DATABASES = {
     
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'aai',  # Replace with your actual database name
-        'USER': 'aai',      # XAMPP uses 'root' by default for MySQL
-        'PASSWORD': 'p@ssw0rd',      # XAMPP's MySQL 'root' user has no password by default, but add one if you’ve set it
-        'HOST': '172.16.11.250', # This points to your local MySQL server in XAMPP
+        'NAME': 'aai611',  # Replace with your actual database name
+        'USER': 'aims',      # XAMPP uses 'root' by default for MySQL
+        'PASSWORD': '12345J@s0n',      # XAMPP's MySQL 'root' user has no password by default, but add one if you’ve set it
+        'HOST': 'localhost', # This points to your local MySQL server in XAMPP
+        'PORT': '3306',      # Default MySQL port in XAMPP
+    },
+    'caf_db': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'fastfood_db',  # Replace with your actual database name
+        'USER': 'aims',      # XAMPP uses 'root' by default for MySQL
+        'PASSWORD': '12345J@s0n',      # XAMPP's MySQL 'root' user has no password by default, but add one if you’ve set it
+        'HOST': 'localhost', # This points to your local MySQL server in XAMPP
         'PORT': '3306',      # Default MySQL port in XAMPP
     }
 }
+
+
+
 
 # https://docs.djangoproject.com/en/stable/ref/settings/#std:setting-DEFAULT_AUTO_FIELD
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

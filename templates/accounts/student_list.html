@@ -28,6 +28,14 @@
 {% include 'snippets/messages.html' %}
 {% include 'snippets/filter_form.html' %}
 
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  <label for="csv_file">Upload CSV File:</label>
+  <input type="file" name="csv_file" accept=".csv" class="form-control mb-3" required>
+  <button type="submit" class="btn btn-primary">Upload</button>
+</form>
+
+
 <div class="table-responsive table-shadow table-light table-striped m-0 mt-4">
     <table class="table">
         <thead>

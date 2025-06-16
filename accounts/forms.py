@@ -306,9 +306,25 @@ class StudentAddForm(UserCreationForm):
 
 
 class LecturerOnlyForm(forms.ModelForm):
+    teacherid = forms.ModelChoiceField(
+        queryset=Teacher.objects.exclude(ref__in=Lecturer.objects.values('teacherid')),  # Exclude students already in Student model
+        to_field_name='ref',  # This ensures that 'ref' is saved when submitted
+        widget=forms.Select(
+            attrs={"class": "browser-default custom-select form-control"}
+        ),
+        label="teacherid",
+    )
+
     class Meta:
         model = Lecturer
         fields = ['teacherid']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Exclude teachers already assigned to a Lecturer
+        self.fields['teacherid'].queryset = Teacher.objects.exclude(
+            ref__in=Lecturer.objects.values('teacherid')
+        )
 
 
 class ProfileUpdateForm(UserChangeForm):
@@ -382,16 +398,14 @@ class ProfileUpdateForm(UserChangeForm):
         label="Address / city",
     )
     
-    teacherid = forms.CharField(
-        required=False,
-        widget=forms.TextInput(
-            attrs={
-                "type": "text",
-                "class": "form-control",
-            }
+    teacherid = forms.ModelChoiceField(
+        queryset=Teacher.objects.exclude(ref__in=Lecturer.objects.values('teacherid')),  # Exclude students already in Student model
+        to_field_name='ref',  # This ensures that 'ref' is saved when submitted
+        widget=forms.Select(
+            attrs={"class": "browser-default custom-select form-control"}
         ),
-        label="tacherid",
-    )    
+        label="teacherid",
+    )
 
     class Meta:
         model = User

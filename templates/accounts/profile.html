@@ -87,6 +87,16 @@
                 <div class="dashboard-description">
                     <p><strong>{% trans 'School:' %} </strong>{% trans 'ADVENIST ACADEMY ILOILO' %}</p>
                     <p><strong>{% trans 'Level:' %} </strong>{{ level.level }}</p>
+                  
+                </div>
+                {% endif %}
+                      {% if user.is_student %}
+                <hr>
+                <p class="fw-bold"><i class="me-2 fas fa-wallet"></i>{% trans 'Cafeteria Balance' %}</p>
+
+                <div class="dashboard-description">
+                 
+                    <p><strong>{% trans 'Amount:' %} </strong>{{ Cafeteria }}</p>
                 </div>
                 {% endif %}
     

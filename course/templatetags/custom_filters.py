@@ -3,6 +3,12 @@ from django import template
 
 register = template.Library()
 
+
+@register.filter
+def get_item2(dictionary, key):
+    return dictionary.get(key)
+
+
 @register.filter
 def get_item(dictionary, key):
     """Safely retrieve an item from a dictionary using the key."""

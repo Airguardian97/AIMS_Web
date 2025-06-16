@@ -31,7 +31,8 @@ from .views import (
     ParentListView,
     edit_parent,
     delete_parent,
-    activation
+    activation,
+    bulk_upload_students
 )
 
 # from .forms import EmailValidationOnForgotPassword
@@ -65,7 +66,7 @@ urlpatterns = [
     
     
     
-    
+    path('admin/student/bulk-upload/', bulk_upload_students, name='bulk_upload_students'),
     
     path("ajax/validate-username/", validate_username, name="validate_username"),
     path("register/", register, name="register"),

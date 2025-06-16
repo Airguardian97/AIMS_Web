@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load i18n %}
 {% block title %}{{ title }} | {% trans 'Learning management system' %}{% endblock title %}
-
+{% load custom_filters %}
 {% block content %}
 
 <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
@@ -30,7 +30,7 @@
                 <tr>
                     <th>#</th>
                     <th>{% trans 'Program Name' %}</th>
-                    <th>{% trans 'Summary' %}</th>
+                    <th>{% trans 'Enrolled' %}</th>
                     {% if request.user.is_superuser %}
                     <th>{% trans 'Action' %}</th>
                     {% endif %}
@@ -45,7 +45,7 @@
                             {{ program.grade_level}}  {{ program.section}}
                         </a>
                     </td>
-                    <td>{{ program.adviser }} </td>
+                    <td>{{ enrolled_counts|get_item2:program.ref|default:0 }}</td>
                         
 
                     {% if request.user.is_superuser %}
