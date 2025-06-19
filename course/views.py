@@ -163,8 +163,18 @@ def view_attendance(request, course_id):
 @login_required
 def save_attendance(request, course_id):
     if request.method == "POST":
-        attendance_date = request.POST.get('attendance_date')
+        # Get the date string from POST (e.g., "2025-06-19")
+        attendance_date_str = request.POST.get('attendance_date')
 
+        # Parse the date string to a datetime.date object
+        attendance_date2 = datetime.strptime(attendance_date_str, '%Y-%m-%d').date()
+
+        # Get current time
+        current_time = datetime.now().time()
+
+        # Combine into a full datetime
+        attendance_date = datetime.combine(attendance_date2, current_time)
+        print(attendance_date)
         if not attendance_date:
             messages.error(request, "Attendance date is required!")
             return redirect('program_detail', pk=course_id)
@@ -179,33 +189,36 @@ def save_attendance(request, course_id):
         # Loop through students and save attendance
         for student in students:
             status = request.POST.get(f"status_{student.ref}")
-
+            print(status)
             # Get parents for the student
             parents = Parent.objects.filter(
                 pid__in=Parentstudent.objects.filter(stud_id=student.ref).values_list('gid', flat=True)
             ).values("first_name", "middle_name", "last_name", "email_address", "contact_no")
 
             if status:
-                Attendance.objects.create(
+                attendance, created = Attendance.objects.update_or_create(
                     date=attendance_date,
-                    cl=course_id,
-                    present_status=status,
                     stud=student.ref,
-                    subject_code=course.ref
+                    subject_code=course.ref,
+                    defaults={
+                        'cl': course_id,
+                        'present_status': status,
+                    }
                 )
 
-                # Send confirmation email to each parent
-                for parent in parents:
-                    email = parent['email_address']
-                    if email and email != 'NA' and '@' in email:
-                        send_attendance_confirmation_email(
-                            student=student,
-                            course=course,
-                            status=status,
-                            date=attendance_date,
-                            recipient_email=email  # Accessing from dict
-                        )
-                        print(email)
+
+                # # Send confirmation email to each parent
+                # for parent in parents:
+                #     email = parent['email_address']
+                #     if email and email != 'NA' and '@' in email:
+                #         send_attendance_confirmation_email(
+                #             student=student,
+                #             course=course,
+                #             status=status,
+                #             date=attendance_date,
+                #             recipient_email=email  # Accessing from dict
+                #         )
+                #         print(email)
 
         messages.success(request, "Attendance saved successfully!")
         return redirect('view_attendance', course_id=course_id)

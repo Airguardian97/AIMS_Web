@@ -35,7 +35,7 @@ from .views import (
     bulk_upload_students
 )
 
-# from .forms import EmailValidationOnForgotPassword
+from .forms import EmailValidationOnForgotPassword
 
 
 urlpatterns = [
@@ -92,24 +92,24 @@ urlpatterns = [
     
     
     
-    # path('password-reset/', PasswordResetView.as_view(
-    #     form_class=EmailValidationOnForgotPassword,
-    #     template_name='registration/password_reset.html'
-    # ),
-    #      name='password_reset'),
-    # path('password-reset/done/', PasswordResetDoneView.as_view(
-    #     template_name='registration/password_reset_done.html'
-    # ),
-    #      name='password_reset_done'),
-    # path('password-reset-confirm/<uidb64>/<token>/', PasswordResetConfirmView.as_view(
-    #     template_name='registration/password_reset_confirm.html'
-    # ),
-    #      name='password_reset_confirm'),
-    # path('password-reset-complete/', PasswordResetCompleteView.as_view(
-    #     template_name='registration/password_reset_complete.html'
-    # ),
-    #      name='password_reset_complete')
-    # ################################################################
+    path('password-reset/', PasswordResetView.as_view(
+        form_class=EmailValidationOnForgotPassword,
+        template_name='registration/password_reset.html'
+    ),
+         name='password_reset'),
+    path('password-reset/done/', PasswordResetDoneView.as_view(
+        template_name='registration/password_reset_done.html'
+    ),
+         name='password_reset_done'),
+    path('password-reset-confirm/<uidb64>/<token>/', PasswordResetConfirmView.as_view(
+        template_name='registration/password_reset_confirm.html'
+    ),
+         name='password_reset_confirm'),
+    path('password-reset-complete/', PasswordResetCompleteView.as_view(
+        template_name='registration/password_reset_complete.html'
+    ),
+         name='password_reset_complete'),
+    ###############################################################
     
     
     

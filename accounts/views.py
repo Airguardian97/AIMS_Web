@@ -319,11 +319,21 @@ def edit_staff(request, pk):
         form = ProfileUpdateForm(instance=lecturer)
         lecturer_form = LecturerOnlyForm(instance=lecturer1)
 
+    current_teacher = lecturer1.teacherid if lecturer1.teacherid else None
+    
+
     return render(
         request,
         "accounts/edit_lecturer.html",
-        {"title": "Edit Lecturer", "form": form, "lecturer_form": lecturer_form}
+        {
+            "title": "Edit Lecturer",
+            "form": form,
+            "lecturer_form": lecturer_form,
+            "current_teacher": current_teacher,
+        }
     )
+
+
 
 
 @method_decorator([login_required, admin_required], name="dispatch")

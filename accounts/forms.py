@@ -8,7 +8,7 @@ from django.contrib.auth.forms import PasswordResetForm
 from course.models import Program
 from .models import User, Student, Parent, RELATION_SHIP, LEVEL, GENDERS, Lecturer
 from course.importmodels import Student as Student2,Teacher
-
+from django.core.exceptions import ValidationError
 
 class StaffAddForm(UserCreationForm):
     username = forms.CharField(
@@ -304,11 +304,10 @@ class StudentAddForm(UserCreationForm):
 
         return user
 
-
 class LecturerOnlyForm(forms.ModelForm):
     teacherid = forms.ModelChoiceField(
-        queryset=Teacher.objects.exclude(ref__in=Lecturer.objects.values('teacherid')),  # Exclude students already in Student model
-        to_field_name='ref',  # This ensures that 'ref' is saved when submitted
+        queryset=Teacher.objects.none(),  # will be set dynamically
+        to_field_name='ref',
         widget=forms.Select(
             attrs={"class": "browser-default custom-select form-control"}
         ),
@@ -321,10 +320,36 @@ class LecturerOnlyForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Exclude teachers already assigned to a Lecturer
-        self.fields['teacherid'].queryset = Teacher.objects.exclude(
-            ref__in=Lecturer.objects.values('teacherid')
-        )
+
+        # Get all assigned teacher refs
+        assigned_refs = list(Lecturer.objects.values_list('teacherid', flat=True))
+
+        # Get current ref from instance
+        current_ref = None
+        if self.instance and self.instance.pk and self.instance.teacherid:
+            current_ref = str(self.instance.teacherid)  # ensure it's a string to match field type
+            # Remove current from exclusion list
+            if current_ref in assigned_refs:
+                assigned_refs.remove(current_ref)
+
+        # if current_ref and current_ref not in assigned_refs:
+        #     assigned_refs.append(current_ref)
+
+       
+        # Final queryset: exclude all assigned refs except current
+        self.fields['teacherid'].queryset = Teacher.objects.exclude(ref__in=assigned_refs)
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+
+        if self.cleaned_data.get("teacherid"):
+            print(self.cleaned_data["teacherid"].ref)
+            instance.teacherid = str(self.cleaned_data["teacherid"].ref)
+
+        if commit:
+            instance.save()
+        return instance
+
 
 
 class ProfileUpdateForm(UserChangeForm):
@@ -398,14 +423,7 @@ class ProfileUpdateForm(UserChangeForm):
         label="Address / city",
     )
     
-    teacherid = forms.ModelChoiceField(
-        queryset=Teacher.objects.exclude(ref__in=Lecturer.objects.values('teacherid')),  # Exclude students already in Student model
-        to_field_name='ref',  # This ensures that 'ref' is saved when submitted
-        widget=forms.Select(
-            attrs={"class": "browser-default custom-select form-control"}
-        ),
-        label="teacherid",
-    )
+
 
     class Meta:
         model = User
@@ -437,11 +455,10 @@ class ProgramUpdateForm(UserChangeForm):
 
 class EmailValidationOnForgotPassword(PasswordResetForm):
     def clean_email(self):
-        email = self.cleaned_data["email"]
+        email = self.cleaned_data.get("email")
         if not User.objects.filter(email__iexact=email, is_active=True).exists():
-            msg = "There is no user registered with the specified E-mail address. "
-            self.add_error("email", msg)
-            return email
+            raise ValidationError("There is no user registered with the specified E-mail address.")
+        return email
 
 
 class ParentAddForm(UserCreationForm):
