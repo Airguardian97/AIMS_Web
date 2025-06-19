@@ -147,7 +147,7 @@ def view_attendance(request, course_id):
     course = get_object_or_404(Course, ref=course_id)    
     
     
-    print(course_id)
+    print(students)
     # # Example: Fetch related attendance records here
     # attendance_records = Attendance.objects.filter(cl=course_id)
     # print(attendance_records)
@@ -265,8 +265,10 @@ def attendance_pdf(request, course_id):
     except Exception:
         return HttpResponse("Invalid date format", status=400)
 
+
+    print(date_obj)
     # Get attendance records
-    attendance_records = Attendance.objects.filter(subject_code=course_id, date=date_obj)
+    attendance_records = Attendance.objects.filter(subject_code=course_id, date__date=date_obj)
 
     # Collect student IDs from Attendance
     student_ids = [record.stud for record in attendance_records if record.stud]
@@ -277,8 +279,12 @@ def attendance_pdf(request, course_id):
     # Map: studentid -> Student object
     student_map = {s.ref: s for s in students}
 
+    subject = Course.objects.filter(ref=course_id).first()  # or use .get(ref=course_id) if you're sure there's only one
+
+
     seen = set()
     data = []
+
 
     for record in attendance_records:
         try:
@@ -301,7 +307,7 @@ def attendance_pdf(request, course_id):
     # print(student_map)
     # Render to PDF
     template = get_template("course/attendance_pdf.html")  # replace with your actual template
-    html = template.render({"data": data, "date": date_obj})
+    html = template.render({"data": data, "date": date_obj, "subject": subject})
 
     from xhtml2pdf import pisa
     response = HttpResponse(content_type='application/pdf')

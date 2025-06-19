@@ -10,19 +10,23 @@
     </style>
 </head>
 <body>
-    <h2>Attendance for {{ date }}</h2>
+  <h2>Attendance for {{ subject.sub_name }}</h2>
+    <h2>as of {{ date }}</h2>
 <table border="1">
   <tr>
+      <th style="width: 40px;">#</th>
     <th>Student Name</th>
-    <th>Status</th>
+    <th style="width: 20%;">Status</th>
   </tr>
   {% for row in data %}
     <tr>
-      <td> {{ row.student.last_name }}, {{ row.student.first_name }} </td>
+      <td>{{ forloop.counter }}</td>
+      <td>{{ row.student.last_name }}, {{ row.student.first_name }}</td>
       <td>{{ row.attendance.present_status }}</td>
     </tr>
   {% endfor %}
 </table>
+
 
 </body>
 </html>
