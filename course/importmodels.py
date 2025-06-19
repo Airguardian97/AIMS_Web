@@ -863,7 +863,7 @@ class Standardsubjecttime(models.Model):
 
 class Attendance(models.Model):
     id = models.AutoField(db_column='id', primary_key=True)  # Field name made lowercase.
-    date = models.DateField(db_column='date',)
+    date = models.DateTimeField(db_column='date',)
     cl = models.CharField(db_column='cl',max_length=10)
     present_status = models.CharField(db_column='present_status',max_length=10)
     stud = models.CharField(db_column='stud',max_length=10, blank=True, null=True)

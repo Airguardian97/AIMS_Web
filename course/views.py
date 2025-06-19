@@ -19,6 +19,8 @@ from django.http import HttpResponse
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 from accounts.utils import send_attendance_confirmation_email
+from django.db.models.functions import TruncDate
+from django.db.models import Q
 
 # from accounts.models import Student
 from core.models import Semester
@@ -196,15 +198,42 @@ def save_attendance(request, course_id):
             ).values("first_name", "middle_name", "last_name", "email_address", "contact_no")
 
             if status:
-                attendance, created = Attendance.objects.update_or_create(
-                    date=attendance_date,
-                    stud=student.ref,
-                    subject_code=course.ref,
-                    defaults={
-                        'cl': course_id,
-                        'present_status': status,
-                    }
-                )
+                
+                # Match only by date part
+                existing_attendance = Attendance.objects.annotate(
+                    date_only=TruncDate('date')
+                ).filter(
+                    Q(date_only=attendance_date.date()),
+                    Q(stud=student.ref),
+                    Q(subject_code=course.ref)
+                ).first()
+
+                if existing_attendance:
+                    existing_attendance.present_status = status
+                    existing_attendance.cl = course_id
+                    existing_attendance.date = attendance_date  # Update time
+                    existing_attendance.save()
+                else:
+                    Attendance.objects.create(
+                        date=attendance_date,
+                        cl=course_id,
+                        present_status=status,
+                        stud=student.ref,
+                        subject_code=course.ref
+                    )
+                
+                
+                
+                
+                # attendance, created = Attendance.objects.update_or_create(
+                #     date=attendance_date,
+                #     stud=student.ref,
+                #     subject_code=course.ref,
+                #     defaults={
+                #         'cl': course_id,
+                #         'present_status': status,
+                #     }
+                # )
 
 
                 # # Send confirmation email to each parent

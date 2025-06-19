@@ -124,39 +124,39 @@ DATABASES = {
     
     
     
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.mysql',
-    #     'NAME': 'aai611',  # Replace with your actual database name
-    #     'USER': 'aims',      # XAMPP uses 'root' by default for MySQL
-    #     'PASSWORD': '12345J@s0n',      # XAMPP's MySQL 'root' user has no password by default, but add one if you’ve set it
-    #     'HOST': 'localhost', # This points to your local MySQL server in XAMPP
-    #     'PORT': '3306',      # Default MySQL port in XAMPP
-    # },
-    # 'caf_db': {
-    #     'ENGINE': 'django.db.backends.mysql',
-    #     'NAME': 'fastfood_db',  # Replace with your actual database name
-    #     'USER': 'aims',      # XAMPP uses 'root' by default for MySQL
-    #     'PASSWORD': '12345J@s0n',      # XAMPP's MySQL 'root' user has no password by default, but add one if you’ve set it
-    #     'HOST': 'localhost', # This points to your local MySQL server in XAMPP
-    #     'PORT': '3306',      # Default MySQL port in XAMPP
-    # }
-    
-     'default': {
+    'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'aai',  # Replace with your actual database name
-        'USER': 'aaisys',      # XAMPP uses 'root' by default for MySQL
-        'PASSWORD': 'P@ssw0rd',      # XAMPP's MySQL 'root' user has no password by default, but add one if you’ve set it
-        'HOST': '172.16.8.10', # This points to your local MySQL server in XAMPP
+        'NAME': 'aai611',  # Replace with your actual database name
+        'USER': 'aims',      # XAMPP uses 'root' by default for MySQL
+        'PASSWORD': '12345J@s0n',      # XAMPP's MySQL 'root' user has no password by default, but add one if you’ve set it
+        'HOST': 'localhost', # This points to your local MySQL server in XAMPP
         'PORT': '3306',      # Default MySQL port in XAMPP
     },
     'caf_db': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'fastfood_db',  # Replace with your actual database name
         'USER': 'aims',      # XAMPP uses 'root' by default for MySQL
-        'PASSWORD': 'p@ssw0rd',      # XAMPP's MySQL 'root' user has no password by default, but add one if you’ve set it
-        'HOST': '172.16.11.251', # This points to your local MySQL server in XAMPP
+        'PASSWORD': '12345J@s0n',      # XAMPP's MySQL 'root' user has no password by default, but add one if you’ve set it
+        'HOST': 'localhost', # This points to your local MySQL server in XAMPP
         'PORT': '3306',      # Default MySQL port in XAMPP
     }
+    
+    #  'default': {
+    #     'ENGINE': 'django.db.backends.mysql',
+    #     'NAME': 'aai',  # Replace with your actual database name
+    #     'USER': 'aaisys',      # XAMPP uses 'root' by default for MySQL
+    #     'PASSWORD': 'P@ssw0rd',      # XAMPP's MySQL 'root' user has no password by default, but add one if you’ve set it
+    #     'HOST': '172.16.8.10', # This points to your local MySQL server in XAMPP
+    #     'PORT': '3306',      # Default MySQL port in XAMPP
+    # },
+    # 'caf_db': {
+    #     'ENGINE': 'django.db.backends.mysql',
+    #     'NAME': 'fastfood_db',  # Replace with your actual database name
+    #     'USER': 'aims',      # XAMPP uses 'root' by default for MySQL
+    #     'PASSWORD': 'p@ssw0rd',      # XAMPP's MySQL 'root' user has no password by default, but add one if you’ve set it
+    #     'HOST': '172.16.11.251', # This points to your local MySQL server in XAMPP
+    #     'PORT': '3306',      # Default MySQL port in XAMPP
+    # }
 }
 
 
