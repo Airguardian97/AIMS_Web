@@ -146,7 +146,7 @@ def view_attendance(request, course_id):
     
     course = get_object_or_404(Course, ref=course_id)    
     
-    
+    print("Course id",course_id)
     print(students)
     # # Example: Fetch related attendance records here
     # attendance_records = Attendance.objects.filter(cl=course_id)
@@ -225,15 +225,7 @@ def save_attendance(request, course_id):
                 
                 
                 
-                # attendance, created = Attendance.objects.update_or_create(
-                #     date=attendance_date,
-                #     stud=student.ref,
-                #     subject_code=course.ref,
-                #     defaults={
-                #         'cl': course_id,
-                #         'present_status': status,
-                #     }
-                # )
+  
 
 
                 # Send confirmation email to each parent
@@ -749,10 +741,8 @@ def user_course_list(request):
         return render(request, "course/user_course_list.html", {"courses": courses})
 
     if request.user.is_student:
-        student = get_object_or_404(Student, ref=request.user.student.stud_id)
-                           
+        student = get_object_or_404(Student, ref=request.user.student.stud_id)                         
         
-
         # Query to get subjects related to the student with ref = 1
         # taken_courses = Course.objects.filter(
         #     ref__in=Studentenrollsubject.objects.filter(
@@ -760,8 +750,7 @@ def user_course_list(request):
         #             stud_id=Student.objects.get(ref=request.user.student.stud_id).ref  # Matching stud_id with studentid
         #         ).values('sr_id')
         #     ).values('subject_code')
-        # )
-        
+        # )        
         taken_courses = Studentenrollsubject.objects.filter(sr__stud_id=request.user.student.stud_id).select_related('sr', 'subject')
         
         
@@ -775,7 +764,6 @@ def user_course_list(request):
             "course/user_course_list.html",
             {"student": student, "taken_courses": taken_courses},
         )
-
     # For other users
     return render(request, "course/user_course_list.html")
 
