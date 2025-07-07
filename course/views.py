@@ -12,6 +12,9 @@ from django.db.models import Max
 from django.db.models import Value, F, CharField
 from django.db.models import OuterRef, Subquery
 from datetime import datetime
+from django.utils.timezone import localtime, now
+
+
 from django.db import IntegrityError
 from accounts.decorators import lecturer_required, student_required, parent_required
 from datetime import date
@@ -171,11 +174,18 @@ def save_attendance(request, course_id):
         # Parse the date string to a datetime.date object
         attendance_date2 = datetime.strptime(attendance_date_str, '%Y-%m-%d').date()
 
-        # Get current time
-        current_time = datetime.now().time()
 
+
+
+        # Get current local datetime
+        current_time = localtime(now())  # timezone-aware
+
+        # Get just the time part
+        current_time_only = current_time.time()  # This is naive
+
+        print(current_time_only)
         # Combine into a full datetime
-        attendance_date = datetime.combine(attendance_date2, current_time)
+        attendance_date = datetime.combine(attendance_date2, current_time_only)
         print(attendance_date)
         if not attendance_date:
             messages.error(request, "Attendance date is required!")
@@ -190,8 +200,7 @@ def save_attendance(request, course_id):
 
         # Loop through students and save attendance
         for student in students:
-            status = request.POST.get(f"status_{student.ref}")
-            print(status)
+            status = request.POST.get(f"status_{student.ref}")            
             # Get parents for the student
             parents = Parent.objects.filter(
                 pid__in=Parentstudent.objects.filter(stud_id=student.ref).values_list('gid', flat=True)
@@ -224,22 +233,20 @@ def save_attendance(request, course_id):
                 
                 
                 
-                
-  
 
 
-                # Send confirmation email to each parent
-                for parent in parents:
-                    email = parent['email_address']
-                    if email and email != 'NA' and '@' in email:
-                        send_attendance_confirmation_email(
-                            student=student,
-                            course=course,
-                            status=status,
-                            date=attendance_date,
-                            recipient_email=email  # Accessing from dict
-                        )
-                        print(email)
+                # # Send confirmation email to each parent
+                # for parent in parents:
+                #     email = parent['email_address']
+                #     if email and email != 'NA' and '@' in email:
+                #         send_attendance_confirmation_email(
+                #             student=student,
+                #             course=course,
+                #             status=status,
+                #             date=attendance_date,
+                #             recipient_email=email  # Accessing from dict
+                #         )
+                #         print(email)
 
         messages.success(request, "Attendance saved successfully!")
         return redirect('view_attendance', course_id=course_id)
