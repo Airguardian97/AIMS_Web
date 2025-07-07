@@ -235,18 +235,18 @@ def save_attendance(request, course_id):
                 
 
 
-                # # Send confirmation email to each parent
-                # for parent in parents:
-                #     email = parent['email_address']
-                #     if email and email != 'NA' and '@' in email:
-                #         send_attendance_confirmation_email(
-                #             student=student,
-                #             course=course,
-                #             status=status,
-                #             date=attendance_date,
-                #             recipient_email=email  # Accessing from dict
-                #         )
-                #         print(email)
+                # Send confirmation email to each parent
+                for parent in parents:
+                    email = parent['email_address']
+                    if email and email != 'NA' and '@' in email:
+                        send_attendance_confirmation_email(
+                            student=student,
+                            course=course,
+                            status=status,
+                            date=attendance_date,
+                            recipient_email=email  # Accessing from dict
+                        )
+                        print(email)
 
         messages.success(request, "Attendance saved successfully!")
         return redirect('view_attendance', course_id=course_id)
