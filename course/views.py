@@ -265,9 +265,15 @@ def attendance_pdf(request, course_id):
         return HttpResponse("Invalid date format", status=400)
 
 
-    print(date_obj)
+    start = datetime.combine(date_obj, datetime.min.time())
+    end = datetime.combine(date_obj, datetime.max.time())
+
+    attendance_records = Attendance.objects.filter(subject_code=course_id, date__range=(start, end))
+    print(start,end)
+
+    # print(date_obj)
     # Get attendance records
-    attendance_records = Attendance.objects.filter(subject_code=course_id, date__date=date_obj)
+    # attendance_records = Attendance.objects.filter(subject_code=course_id, date__date=date_obj)
 
     # Collect student IDs from Attendance
     student_ids = [record.stud for record in attendance_records if record.stud]
