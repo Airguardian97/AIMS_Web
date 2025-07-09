@@ -12,7 +12,8 @@ from django.db.models import Max
 from django.db.models import Value, F, CharField
 from django.db.models import OuterRef, Subquery
 from datetime import datetime
-from django.utils.timezone import localtime, now
+from django.utils.timezone import now, localtime, make_aware, get_current_timezone, is_naive
+
 
 
 from django.db import IntegrityError
@@ -173,19 +174,26 @@ def save_attendance(request, course_id):
 
         # Parse the date string to a datetime.date object
         attendance_date2 = datetime.strptime(attendance_date_str, '%Y-%m-%d').date()
+        
+       
+        # Parse date_str to a date object
+        date_obj = datetime.strptime(attendance_date_str, "%Y-%m-%d").date()  # → datetime.date object
 
+        # Get current local time
+        current_time = datetime.now()
+        current_time_only = current_time.time()  # → datetime.time object
 
+        # Combine date_str + current local time
+        combined_datetime = datetime.combine(date_obj, current_time_only)
 
+        # Make it timezone-aware (important if USE_TZ=True)
+        attendance_date = make_aware(combined_datetime, get_current_timezone())
 
-        # Get current local datetime
-        current_time = localtime(now())  # timezone-aware
-
-        # Get just the time part
-        current_time_only = current_time.time()  # This is naive
-
-        print(current_time_only)
-        # Combine into a full datetime
-        attendance_date = datetime.combine(attendance_date2, current_time_only)
+        # For debugging
+        print("Final attendance_date (aware):", attendance_date)
+        
+        
+        
         print(attendance_date)
         if not attendance_date:
             messages.error(request, "Attendance date is required!")
@@ -207,46 +215,56 @@ def save_attendance(request, course_id):
             ).values("first_name", "middle_name", "last_name", "email_address", "contact_no")
 
             if status:
-                
                 # Match only by date part
-                existing_attendance = Attendance.objects.annotate(
-                    date_only=TruncDate('date')
-                ).filter(
-                    Q(date_only=attendance_date.date()),
-                    Q(stud=student.ref),
-                    Q(subject_code=course.ref)
+                # existing_attendance = Attendance.objects.annotate(
+                #     date_only=TruncDate('date')
+                # ).filter(
+                #     Q(date_only=attendance_date.date()),
+                #     Q(stud=student.ref),
+                #     Q(subject_code=course.ref)
+                # ).first()
+                
+                
+                start = datetime.combine(attendance_date.date(), datetime.min.time())
+                end = datetime.combine(attendance_date.date(), datetime.max.time())
+
+                existing_attendance = Attendance.objects.filter(
+                    date__range=(start, end),
+                    stud=student.ref,
+                    subject_code=course.ref
                 ).first()
+
 
                 if existing_attendance:
                     existing_attendance.present_status = status
-                    existing_attendance.cl = course_id
-                    existing_attendance.date = attendance_date  # Update time
+                    existing_attendance.cl = course_id          
+                    existing_attendance.date = combined_datetime
                     existing_attendance.save()
+                    print("Updated date:", existing_attendance.date)
                 else:
                     Attendance.objects.create(
-                        date=attendance_date,
+                        date=combined_datetime,
                         cl=course_id,
                         present_status=status,
                         stud=student.ref,
                         subject_code=course.ref
                     )
-                
-                
+              
                 
 
 
-                # Send confirmation email to each parent
-                for parent in parents:
-                    email = parent['email_address']
-                    if email and email != 'NA' and '@' in email:
-                        send_attendance_confirmation_email(
-                            student=student,
-                            course=course,
-                            status=status,
-                            date=attendance_date,
-                            recipient_email=email  # Accessing from dict
-                        )
-                        print(email)
+                # # Send confirmation email to each parent
+                # for parent in parents:
+                #     email = parent['email_address']
+                #     if email and email != 'NA' and '@' in email:
+                #         send_attendance_confirmation_email(
+                #             student=student,
+                #             course=course,
+                #             status=status,
+                #             date=attendance_date,
+                #             recipient_email=email  # Accessing from dict
+                #         )
+                #         print(email)
 
         messages.success(request, "Attendance saved successfully!")
         return redirect('view_attendance', course_id=course_id)
