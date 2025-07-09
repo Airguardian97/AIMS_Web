@@ -160,7 +160,7 @@ DATABASES = {
 }
 
 
-
+SESSION_COOKIE_AGE = 86400 
 
 # https://docs.djangoproject.com/en/stable/ref/settings/#std:setting-DEFAULT_AUTO_FIELD
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

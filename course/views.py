@@ -208,7 +208,8 @@ def save_attendance(request, course_id):
 
         # Loop through students and save attendance
         for student in students:
-            status = request.POST.get(f"status_{student.ref}")            
+            status = request.POST.get(f"status_{student.ref}") 
+            print(status)           
             # Get parents for the student
             parents = Parent.objects.filter(
                 pid__in=Parentstudent.objects.filter(stud_id=student.ref).values_list('gid', flat=True)
